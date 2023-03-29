@@ -5,6 +5,7 @@
 # arguments:
 # dircross: dir were data is located. It can be an empty string if the cross files include the path and name
 # dir: dir to save results.
+# dirfun: dir were functions for plot are located
 # locfile: .loc file name, it can include the path
 # mapfile: .map file name, it can include the path
 # phenofile: .qua file name, it can include the path
@@ -21,7 +22,7 @@
 
 
 
-single_qtl <- function(dircross, dir, locfile, mapfile, phenofile, prefixResults, 
+single_qtl <- function(dircross, dir, dirfun, locfile, mapfile, phenofile, prefixResults, 
                        ncores, step=0.5, off.end=0, error.prob=0.001, alpha=0.1, n.perm=1000,
                        map.function="kosambi", stepwidth="fixed", model_scanone="normal"){
   
@@ -201,28 +202,12 @@ single_qtl <- function(dircross, dir, locfile, mapfile, phenofile, prefixResults
   
   qtl.effects$ratio = qtl.effects$dominance/abs(qtl.effects$additive)
   
-  
-  # Plots -------------------------------------------------------------------
-  
+  # Saving Data -------------------------------------------------------------
+
   outputdir <- paste0(dir, prefixResults,  "_Results/")
   outputplot <- paste0(dir, prefixResults,  "_Plots/")
   dir.create(outputdir, showWarnings = FALSE)
   dir.create(outputplot, showWarnings = FALSE)
-  
-  message(paste0("Saving Plots at: ", outputdir, " and ", outputplot))
-  
-  source("QTL_Analysis.singleQTL_plot.R")
-  genoPlot.pdf(cross)
-  missGenoPlot.pdf(cross)
-  plotPhenotypes.pdf(data.pheno)
-  plotLOD.pdf(out)
-  
-  source("QTL_Analysis.singleQTL_map_plot.R") 
-  plot.single.QTL(lodint, "Lod")
-  plot.single.QTL(bayesint, "Bayes")
-  
-  
-  # Saving Data -------------------------------------------------------------
   
   message("Saving Data...")
   
@@ -230,7 +215,7 @@ single_qtl <- function(dircross, dir, locfile, mapfile, phenofile, prefixResults
   save.image(paste(prefixResults, format(Sys.Date(), "%m%d%Y"), "RData", sep = "."))
   
   
-  # Save Files and Plots ####
+  # Save Files ####
   
   write.table(lodint,
               file = paste(outputdir, prefixResults, ".qtl.LodIntervals.txt", sep = ""), sep = "\t", 
@@ -244,17 +229,23 @@ single_qtl <- function(dircross, dir, locfile, mapfile, phenofile, prefixResults
   write.table(qtl.effects,
               file = paste(outputdir, prefixResults, ".qtl.effects.txt", sep = ""), sep = "\t", 
               row.names = FALSE, quote = FALSE )
+    
+  # Plots -------------------------------------------------------------------
   
+  message(paste0("Saving Plots at: ", outputdir, " and ", outputplot))
+  
+  source(paste0(dirfun, "QTL_Analysis.singleQTL_plot.R"))
+  genoPlot.pdf(cross)
+  missGenoPlot.pdf(cross)
+  plotPhenotypes.pdf(data.pheno)
+  plotLOD.pdf(out)
+  
+  source(paste0(dirfun, "QTL_Analysis.singleQTL_map_plot.R") )
+  plot.single.QTL(lodint, "Lod")
+  plot.single.QTL(bayesint, "Bayes")
   
   message("Done!")
   
-  
+
 }
-
-
-
-
-
-
-
 

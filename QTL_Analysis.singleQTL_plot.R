@@ -17,7 +17,7 @@ interleave <- function(x,y){
 }
 
 # PALETTE #
-mypal.gen = plasma(ngeno)
+#mypal.gen = plasma(ngeno)
 
 # GENOTYPE #
 genoPlot.pdf = function(cross){
@@ -28,6 +28,9 @@ genoPlot.pdf = function(cross){
   dev.off()
 }
 genoPlot = function(cross){
+  
+  mypal.gen = plasma(ngeno)
+  
   # Data 
   data = matrix(ncol = 4, nrow=0)
   colnames(data) = c("Individual", "marker", "genotype", "chromosome")
