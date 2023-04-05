@@ -1,20 +1,21 @@
-# QTL Analysis using Rqtl package
-# Author: Vianey Barrera (vpbarrerae@gmail.com / v.barrera@cgiar.org)
-# The script runs the single QTL analysis (scanone) using data in mapqtl format.
-# It computes QTLs, its Lod/Bayes intervals, scores and effects
+# Short name: QTL Analysis using Rqtl package
+# Description: It computes single QTLs, Lod/Bayes intervals, scores, and effects using a mapqtl format
+# Output:
 #
+# Author: Vianey Barrera (vpbarrerae@gmail.com / v.barrera@cgiar.org)
+# 
 # 1 Single-qtl function arguments:
 # 1.1 Objects:
-# dircross: dir were data is located. It can be an empty string if the cross files include the path and name
-# dir: dir to save results.
-# dirfun: dir were functions for plot are located
-# locfile: .loc file name, it can include the path
-# mapfile: .map file name, it can include the path
-# phenofile: .qua file name, it can include the path
-# prefixResults: Results will have this prefix
-# ncores: number of cores for permutation test
+# dir: Directory (dir) to save results
+# dircross: dir where data is located. It can be empty if the cross files include the path and name
+# dirfun: dir were functions for plotting are located
+# locfile: .loc file name. It can include the path
+# mapfile: .map file name. It can include the path
+# phenofile: .qua file name. It can include the path
+# prefixResults: The prefix that the results will have
+# ncores: Number of cores for permutation test
 #
-# 1.2 scanone arguments
+# 1.2 scanone function arguments:
 # step <- 0.5
 # off.end <- 0
 # error.prob <- 0.001
@@ -27,17 +28,20 @@
 
 
 # Function init
-single_qtl <- function(dircross, dir, dirfun, locfile, mapfile, phenofile, prefixResults, ncores,
+single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefixResults, ncores,
                        step = 0.5, off.end = 0, error.prob = 0.001, alpha = 0.1, n.perm = 1000,
                        map.function = "kosambi", stepwidth = "fixed", model_scanone = "normal") {
   
   
   
   # 1: Loading packages and variables ------------------------------------------
+  if (!require(qtl)) install.packages("qtl")
+  if (!require(tidyverse)) install.packages("tidyverse")
+  if (!require(snow)) install.packages("snow")
   
-  library("qtl")
-  library("tidyverse")
-  library("snow")
+  library(qtl)
+  library(tidyverse)
+  library(snow)
   
   options(warn = -1)
   
