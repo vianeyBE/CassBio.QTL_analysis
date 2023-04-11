@@ -1,40 +1,51 @@
-# Author: Camilo E. Sanchez (c.e.sanchez@cgiar.org) Vianey Barrera-Enriquez (vpbarrera@gmail.com)
-# Get the annotation of the gen containing the SNP using the rqtl/QTL mammping results
-# Additionally, it retrieve the closest  gene down and up stream.
-# It requires: 
-# Mdir: the directory that contains the GAPIT results separated by traits
-# output: basename of the output file
+# Short name: Annotation for QTL results
+# Description (1): Get the annotation of the gen containing the SNP using the rqtl/QTL maping results
+# Description (2): Retrieves the closest genes down and up stream
+# Output: Basename of the output file
+#
+# Authors: Camilo E. Sanchez (c.e.sanchez@cgiar.org) and Vianey Barrera-Enriquez (vpbarrera@gmail.com)
+#
+# Arguments:
+# pat: The location path of the files
+# wdyw: What do you want to filter? (Gen, exon)
+# Mdir: Name of the directory that contains the QTL results
+
 # gff3: gff3 annotation format. It contains gene ID, transcript ID, GO ID, star, end
 # annotationFile: text anotation file containing additional description of the genes
 
-# Configure the requirements
-pat <- as.character()
-wdyw <- as.character()
-Mdir <- as.character()
 
-# Configure them manually on code
-pat <- "QTL_LOD_Intervals."
-wdyw <- "gene"
-Mdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996"
 
-# Configure them using a prompt
+# 1: Configure the initial requirements ----------------------------------------
+# Manually using the console
+message("Enter the path of file names to looking for\n\n",
+        "For example: QTL_LOD_Intervals. The path must finish with a point (.)\n\n",
+        "Finish with two tabs")
+pat <- scan(what = character(), n = 1)
+
+message("Enter what are you looking for to anotate\n\n",
+        "Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR\n\n",
+        "Finish with two tabs")
+wdyw <- scan(what = character(), n = 5)
+
+message("Enter the working directory\n\n",
+        "For example: home/user/folder\n\n",
+        "Finish with two tabs")
+Mdir <- scan(what = character(), n = 1)
+
+# Set as default
 if (rlang::is_empty(pat)) {
-  pat <- readline(prompt = 
-      "Enter the path of file names to looking for (p.e., QTL_LOD_Intervals. [Must finish with a point (.)]): ")
+  pat <- "GAPIT.Association.GWAS_Results."
 }
-
 if (rlang::is_empty(wdyw)) {
-  wdyw <- readline(prompt =
-      "Enter what are you looking for to anotate (options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR): ")
+  mod <- c("gene")
 }
-
 if (rlang::is_empty(Mdir)) {
-  Mdir <- readline(prompt = "Enter the working directory (p.e., home/user/folder): ")
+  Mdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/03_GWAS_PPD_Populations/04_GWAS/GAPIT_Results"
 }
 
 
 
-# 1: Load all the directories, info, and data ----------------------------------
+# 2: Load all the directories, info, and data ----------------------------------
 
 # Load packages
 if (!require(tidyverse)) install.packages(tidyverse)
@@ -66,7 +77,7 @@ gff3 <- read.delim("Mesculenta_305_v6.1.gene.gff3", header = F, comment.char = "
 
 
 
-# 2: Find all the CSVs with the results and filter them ------------------------
+# 3: Find all the CSVs with the results and filter them ------------------------
 
 message("Getting list of CSV files...")
 
@@ -115,7 +126,7 @@ rm(csvL, i, p, name.F, name.T)
 
 
 
-# 3: Match the results with the gene annotation database -----------------------
+# 4: Match the results with the gene annotation database -----------------------
 
 # Creates a conditional
 # If there is at least one result of the GWAS models, the annotation is done
@@ -171,7 +182,7 @@ if (dim(QTL_s)[1] > 0){
 
 
 
-  # 4: Formatting dataframe ----------------------------------------------------
+  # 5: Formatting dataframe ----------------------------------------------------
 
   message("Obtaining gene information...")
   
@@ -200,7 +211,7 @@ if (dim(QTL_s)[1] > 0){
     
     rm(annotLm, gffL, i, p)
     
-    # 5: Save output ---------------------------------------------------------------
+    # 6: Save output -----------------------------------------------------------
     
     message("Saving output file: 'QTL_Annotation.csv' in working directory")
     
