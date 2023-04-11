@@ -30,7 +30,7 @@
 # Function init
 single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefixResults, ncores,
                        step = 0.5, off.end = 0, error.prob = 0.001, alpha = 0.1, n.perm = 1000,
-                       map.function = "kosambi", stepwidth = "fixed", model_scanone = "normal") {
+                       map.function = "kosambi", stepwidth = "fixed", model_scanone = "normal"){
   
   
   
@@ -61,16 +61,17 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   cross <- jittermap(cross)
   cross <- drop.nullmarkers(cross)
   
-  nind <- nind(cross) ###### #########
-  message(paste0("Number of individuals: ", nind))
+  nind <- nind(cross)
   npheno <- nphe(cross)
-  message(paste0("Number of traits: ", npheno-1))
   nmarker <- totmar(cross)
-  message(paste0("Number of SNPs: ", nmarker))
   nchro <- nchr(cross)
-  message(paste0("Number of chromosomes: ", nchro))
   
-  # ngeno = length(levels(as.factor(cross$geno[[1]][["data"]])))
+  message(paste0("Number of individuals: ", nind, "\n",
+                 "Number of traits: ", npheno - 1, "\n",
+                 "Number of SNPs: ", nmarker, "\n",
+                 "Number of chromosomes: ", nchro, "\n"))
+  
+  # ngeno <- length(levels(as.factor(cross$geno[[1]][["data"]])))
   
   # Genetic map data
   data.map <- pull.map(cross, as.table = T) %>% rownames_to_column(var = 'mar')
@@ -78,6 +79,7 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   # Phenotype data
   data.pheno <- cross[["pheno"]]
   phenotypes <- colnames(data.pheno)
+  
   
   
   # 3: Interval mapping --------------------------------------------------------
@@ -109,7 +111,7 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   lod.threshold <- melt(as.data.frame(print(summary(out.perm, alpha = alpha))), 
                         value.name = "lod", variable.name = "phenotype")
   
-  message("Finding Peaks...")
+  message("Finding peaks...")
   
   # Estimate picks 
   peaks <- (summary(object = out, perms = out.perm, format = "allpheno", 
@@ -128,18 +130,19 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   
   # 6: Estimate intervals ------------------------------------------------------
   
-  message("Estimating Intervals using LOD and Bayes method...")
+  message("Estimating intervals using LOD and Bayes method...")
   
   colnames_intervals <- c("phenotype", "pheno_num", "chr", "lod", 
                           "start.marker", "start.pos", 
                           "max.marker", "max.pos", 
                           "end.marker", "end.pos")
   
-  # Estimate Intervals - LOD method
+  # LOD method
   lodint <- matrix(ncol = 10, nrow = 0)
   colnames(lodint) <- colnames_intervals
   
   for (i in 1:dim(peaks)[1]) {
+    
     lodint.single <- lodint(out, chr = as.character(peaks$chr[i]), 
                             lodcolumn = as.numeric(peaks$pheno_num[i]), 
                             expandtomarkers = T, drop = 1)
@@ -156,67 +159,73 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
                               end.pos = lodint.single[3,2])
     
     lodint <- rbind(lodint, lodint.temp)
+    
   }
   
   lodint <- distinct(lodint, pheno_num, chr, start.pos, max.pos, end.pos, .keep_all = T) 
   
   # Find markers
-  for (i in 1:dim(lodint)[1]) {
+  for (i in 1:dim(lodint)[1]){
+    
     lodint[i,7] <- find.marker(cross, chr = lodint[i,3], pos = lodint[i,8])
+    
   }
   
-  # Estimate intervals - BAYES method
+  # Bayes method
   bayesint <- matrix(ncol = 10, nrow = 0)
-  
   colnames(bayesint) <- colnames_intervals
   
-  for (i in 1:dim(peaks)[1]) {
-    bayesint.single = bayesint(out, chr = as.character(peaks$chr[i]), 
+  for (i in 1:dim(peaks)[1]){
+    
+    bayesint.single <- bayesint(out, chr = as.character(peaks$chr[i]), 
                                lodcolumn = as.numeric(peaks$pheno_num[i]), 
                                expandtomarkers = T)
     
-    bayesint.temp = data.frame(phenotype = as.character(peaks$phenotype[i]),
-                               pheno_num = as.numeric(peaks$pheno_num[i]), 
-                               chr = as.character(peaks$chr[i]), 
-                               lod = peaks$lod[i], 
-                               start.marker = row.names(bayesint.single)[1], 
-                               start.pos = bayesint.single[1,2], 
-                               max.marker = row.names(bayesint.single)[2], 
-                               max.pos = bayesint.single[2,2], 
-                               end.marker = row.names(bayesint.single)[3], 
-                               end.pos = bayesint.single[3,2])
+    bayesint.temp <- data.frame(phenotype = as.character(peaks$phenotype[i]),
+                                pheno_num = as.numeric(peaks$pheno_num[i]), 
+                                chr = as.character(peaks$chr[i]), 
+                                lod = peaks$lod[i], 
+                                start.marker = row.names(bayesint.single)[1], 
+                                start.pos = bayesint.single[1,2], 
+                                max.marker = row.names(bayesint.single)[2], 
+                                max.pos = bayesint.single[2,2], 
+                                end.marker = row.names(bayesint.single)[3], 
+                                end.pos = bayesint.single[3,2])
     
-    bayesint = rbind(bayesint, bayesint.temp)
+    bayesint <- rbind(bayesint, bayesint.temp)
+    
   }
   
   bayesint <- distinct(bayesint, pheno_num, chr, start.pos, max.pos, end.pos, .keep_all = T) 
   
   # Find markers
   for (i in 1:dim(lodint)[1]) {
+    
     bayesint[i,7] <-  find.marker(cross, chr = bayesint[i,3], pos = bayesint[i,8])
+    
   }
   
   
   
   # 7: QTL effects -------------------------------------------------------------
   
-  message("Computing QTL Effects")
+  message("Computing QTL effects")
   
   qtl.effects <- cbind(lodint[,c(1,3,4,7)], additive = NA, dominance = NA, ratio = NA)
   
   for (i in 1:dim(lodint)[1]){
     
-    mar <-  find.marker(cross, chr=lodint$chr[i], pos = lodint$max.pos[i])
-    eff <-  effectplot(cross, mname1=mar, pheno.col = lodint$pheno_num[i] + 1, draw = F)
+    mar <- find.marker(cross, chr=lodint$chr[i], pos = lodint$max.pos[i])
+    eff <- effectplot(cross, mname1=mar, pheno.col = lodint$pheno_num[i] + 1, draw = F)
     qtl.effects$additive[i] <- (eff[["Means"]][1] - eff[["Means"]][4])/2
-    qtl.effects$dominance[i] <- 
+    qtl.effects$dominance[i] <-
       (eff[["Means"]][2] + eff[["Means"]][3])/2 - (eff[["Means"]][1] + eff[["Means"]][4])/2
     effectplot(cross, mname1 = mar, pheno.col = lodint$pheno_num[i]+1)
     plotPXG(cross, marker = mar, pheno.col = lodint$pheno_num[i]+1)
     
   }
   
-  qtl.effects$ratio = qtl.effects$dominance/abs(qtl.effects$additive)
+  qtl.effects$ratio <- qtl.effects$dominance/abs(qtl.effects$additive)
   
   
   
@@ -228,13 +237,14 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   dir.create(outputdir, showWarnings = F)
   dir.create(outputplot, showWarnings = F)
   
-  message("Saving Data...")
+  message("Saving data...")
   
   # R Data
   save.image(paste(prefixResults, format(Sys.Date(), "%m%d%Y"), "RData", sep = "."))
   
   # Save files
-  write.table(lodint, file = paste(outputdir, prefixResults, ".qtl.LodIntervals.txt", sep = ""),
+  write.table(lodint,
+              file = paste(outputdir, prefixResults, ".qtl.LodIntervals.txt", sep = ""),
               sep = "\t", row.names = F, quote = F)
   write.table(bayesint,
               file = paste(outputdir, prefixResults, ".qtl.BayesIntervals.txt", sep = ""),
@@ -249,7 +259,7 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   
   # 9: Plots -----------------------------------------------------------------
   
-  message(paste0("Saving Plots at: ", outputdir, " and ", outputplot))
+  message(paste0("Saving plots at: ", outputdir, " and ", outputplot))
   
   source(paste0(dirfun, "QTL_Analysis.singleQTL_plot.R"))
   genoPlot.pdf(cross)
@@ -263,6 +273,4 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   
   message("Done!")
   
-
 }
-
