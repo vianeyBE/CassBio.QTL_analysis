@@ -2,16 +2,16 @@
 
 Pipeline for QTL analysis for Cassava using Rqtl R package
 
-The pipeline has main 3 steps
+The pipeline has four main steps:
 
 1. Single QTL mapping
-2. plots
-3. MQM 
+2. MQM
+3. Plots (Boxplots and Manhattan)
 4. Annotation
 
 ## 1. Single QTL Mapping
 
-This code performs QTL (Quantitative Trait Locus) analysis using the Rqtl package. It computes single QTLs, Lod/Bayes intervals, scores, and effects using a mapqtl input format.
+This code performs QTL (Quantitative Trait Locus) analysis using Rqtl package. It computes single QTLs, LOD/Bayes intervals, scores, and effects using a mapqtl input format.
 
 ### Usage
 ```R
@@ -21,6 +21,7 @@ single_qtl(dir, dircross, dirfun, locfile, mapfile, phenofile, prefixResults, nc
 ```
 
 ### Arguments
+1. Single QTL function:
 - `dir`: Directory (dir) to save results
 - `dircross`: Directory where data is located. It can be empty if the cross files include the path and name
 - `dirfun`: Directory were functions for plotting are located
@@ -29,13 +30,15 @@ single_qtl(dir, dircross, dirfun, locfile, mapfile, phenofile, prefixResults, nc
 - `phenofile`: .qua file name. It can include the path
 - `prefixResults`: The prefix that the results will have
 - `ncores`: Number of cores for permutation test
+
+2. scanone function:
 - `step`: Step size in cM used for interval mapping (default = 0.5)
 - `off.end`: A value added to each end of the chromosome, to extend the genetic map. (default = 0)
 - `error.prob`: The probability of a genotyping error. (default = 0.001)
 - `alpha`: The significance level to use for peak detection (default = 0.1)
 - `n.perm`: Number of permutations to use for significance testing. (default = 1000)
 - `map.function`: The genetic map function to use. (default = "kosambi")
-stepwidth: Method used to compute step size. Can be "fixed" or "cov" (default = "fixed")
+- `stepwidth`: Method used to compute step size. Can be "fixed" or "cov" (default = "fixed")
 - `model_scanone`: Model used in the single-QTL scan. Can be "normal", "binary" or "poisson" (default = "normal")
 
 ### Details
@@ -46,12 +49,12 @@ A permutation test is conducted using `scanone()` to compute the genome-wide sig
 Peaks are identified as locations in the genome where the genetic effect of the markers is above the genome-wide significance threshold.
 
 ### Output
-
+*In progess*
 
 ### Dependencies
-- tidyverse
-- snow
-- qtl
+- `tidyverse`
+- `snow`
+- `qtl`
 
 ---
 
