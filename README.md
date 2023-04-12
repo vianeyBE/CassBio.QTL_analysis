@@ -2,11 +2,13 @@
 
 Pipeline for QTL analysis for Cassava using Rqtl R package
 
+**Authors**: Vianey Barrera-Enriquez and Camilo E. Sanchez-Sarria
+
 The pipeline has four main steps:
 
 1. Single QTL mapping
-2. MQM
-3. Plots (Boxplots and Manhattan)
+2. MQM (*in progress*)
+3. Plots
 4. Annotation
 
 ## 1. Single QTL Mapping
@@ -52,9 +54,9 @@ Peaks are identified as locations in the genome where the genetic effect of the 
 *In progess*
 
 ### Dependencies
+- `qtl`
 - `tidyverse`
 - `snow`
-- `qtl`
 
 ---
 
