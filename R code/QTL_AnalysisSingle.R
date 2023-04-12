@@ -4,8 +4,8 @@
 #
 # Author: Vianey Barrera (vpbarrerae@gmail.com / v.barrera@cgiar.org)
 # 
-# 1 Single-qtl function arguments:
-# 1.1 Objects:
+# Arguments:
+# 1. Single QTL function:
 # dir: Directory (dir) to save results
 # dircross: dir where data is located. It can be empty if the cross files include the path and name
 # dirfun: dir were functions for plotting are located
@@ -15,15 +15,15 @@
 # prefixResults: The prefix that the results will have
 # ncores: Number of cores for permutation test
 #
-# 1.2 scanone function arguments:
-# step <- 0.5
-# off.end <- 0
-# error.prob <- 0.001
-# alpha <- 0.1
-# map.function <- "kosambi"
-# stepwidth <- "fixed"
-# model_scanone <- "normal"
-# n.perm <- 1000
+# 2 scanone function:
+# step: Step size in cM used for interval mapping (default = 0.5)
+# off.end: A value added to each end of the chromosome, to extend the genetic map (default = 0)
+# error.prob: The probability of a genotyping error (default = 0.001)
+# alpha: The significance level to use for peak detection (default = 0.1)
+# n.perm: Number of permutations to use for significance testing (default = 1000)
+# map.function: The genetic map function to use (default = "kosambi")
+# stepwidth: Method used to compute step size. Can be "fixed" or "cov" (default = "fixed")
+# model_scanone: Model used for single-QTL scan. Can be "normal", "binary" or "poisson" (default = "normal")
 
 
 
