@@ -44,6 +44,8 @@ genoPlot.pdf <- function(cross){
   
 }
 
+
+
 genoPlot <- function(cross){
   
   mypal.gen <- plasma(ngeno)
@@ -98,6 +100,8 @@ missGenoPlot.pdf <- function(cross){
   dev.off()
   
 }
+
+
 
 missGenoPlot <- function(cross){
   
