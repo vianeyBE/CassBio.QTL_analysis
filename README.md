@@ -71,7 +71,52 @@ Peaks are identified as locations in the genome where the genetic effect of the 
 
 ## 4. Annotation of results
 
+This code annotates the gen that overlaps and/or contain the significant QTLs obtained from the `rqtl` results.
+
+### Usage
+
+```R
+
+QTL_Annotation(Wdir, Ddir, pat, wdyw)
+
+```
+
+### Arguments
+
+- `Wdir`: Name of the directory that contains the GAPIT results. For example: home/user/folder.
+- `Ddir`: Directory where is located the annotation files (annot, GFF files).
+- `pat`: Enter the path of file names to look for. For example: QTL_LOD_Intervals. The path must finish with a point (.).
+- `wdyw`: Enter what are you looking for to annotate. Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR.
+- `annot`: Annotation details of the genes. txt file from the genome version used for alignment.
+- `GFF`: gff3 file from the genome version used for alignment.
+- `version`: (Optional) You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1. Default = 6.1).
+
+## Details
+
 *In progress*
+
+### Examples
+
+```R
+
+# Set arguments
+Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
+pat <- "QTL_LOD_Intervals."
+wdyw <- "gene"
+
+# Run function
+QTL_Annotation(Wdir, Ddir, pat, wdyw)
+
+```
+
+### Output
+
+A single CSV file containing relevant gene information plus QTLs' LOD, P-values, traits, and effects.
+
+### Dependencies
+
+- `tidyverse`
 
 ---
 
