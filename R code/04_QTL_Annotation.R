@@ -248,10 +248,10 @@ QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot = NULL, GFF = NULL, vers
 
 
 ###### Example(s) ######
-Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
-Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
-pat <- "QTL_LOD_Intervals."
-wdyw <- "gene"
+# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+# Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
+# pat <- "QTL_LOD_Intervals."
+# wdyw <- "gene"
 
 # Run function
-QTL_Annotation(Wdir, Ddir, pat, wdyw)
+# QTL_Annotation(Wdir, Ddir, pat, wdyw)
