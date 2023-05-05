@@ -8,11 +8,11 @@
 # Arguments:
 # Wdir: Name of the directory that contains the GAPIT results. For example: home/user/folder.
 # Ddir: Directory where is located the annotation files (annot, GFF files).
-# pat: Enter the path of file names to look for. For example: QTL_LOD_Intervals. The path must finish with a point (.).
+# pat: Enter the path of file names to look for. For example: QTL_LOD_Intervals.
 # wdyw: Enter what are you looking for to annotate (Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR).
 # annot: Annotation details of the genes. txt file from the genome version used for alignment.
 # GFF: gff3 file from the genome version used for alignment.
-# version: (Optional) You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1. Default = 6.1).
+# version: You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1).
 
 
 
@@ -23,7 +23,7 @@
 
 # 0: Function init -------------------------------------------------------------
 
-QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot = NULL, GFF = NULL, version = 6.1){
+QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot, GFF, version){
   
   # 1: Load all the directories, info, and data --------------------------------
   
@@ -35,16 +35,16 @@ QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot = NULL, GFF = NULL, vers
   
   message("Loading required files to do the annotation")
   
-  if (version == 6.1) {
+  if (version == 6.1){
     
     # Set working directory where files are located
     setwd(Ddir)
     
-    annot <- read.delim("Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt", header = F) %>%
+    annot <- read.delim(annot, header = F) %>%
       rename(ID = 1, Locus = 2, Trans = 3, Peptide = 4, GO = 10, AT.name = 12, AT.define = 13) %>%
       select(ID, Locus, Trans, Peptide, GO, AT.name, AT.define)
     
-    GFF <- read.delim("Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3", header = F, comment.char = "#") %>%
+    GFF <- read.delim(GFF, header = F, comment.char = "#") %>%
       rename(Chr = V1, What = V3, Start = V4, End = V5) %>%
       tidyr::separate(col = V9, into = c("ID", "na"), sep = ";") %>%
       tidyr::separate(col = ID, into = c("na2", "na3"), sep = "=") %>%
@@ -63,11 +63,11 @@ QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot = NULL, GFF = NULL, vers
     # Set working directory where files are located
     setwd(Ddir)
     
-    annot_8 <- read.delim("Mesculenta_671_v8.1/Mesculenta_671_v8.1.annotation_info.txt", header = T) %>%
+    annot <- read.delim(annot, header = T) %>%
       rename(ID = 1, Locus = 2, Trans = 3, Peptide = 4, GO = 10, AT.name = 11, AT.define = 12) %>%
       select(ID, Locus, Trans, Peptide, GO, AT.name, AT.define)
     
-    GFF <- read.delim("Mesculenta_671_v8.1/Mesculenta_671_v8.1.gene.gff3.gz", header = F, comment.char = "#") %>%
+    GFF <- read.delim(GFF, header = F, comment.char = "#") %>%
       rename(Chr = V1, What = V3, Start = V4, End = V5) %>%
       tidyr::separate(col = V9, into = c("ID", "na"), sep = ";") %>%
       tidyr::separate(col = ID, into = c("na2", "na3"), sep = "=") %>%
@@ -91,7 +91,7 @@ QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot = NULL, GFF = NULL, vers
   
   # Get the names of the files
   setwd(Wdir)
-  names <- list.files(path = Wdir, pattern = pat, all.files = F, full.names = F, recursive = T)
+  names <- list.files(path = Wdir, pattern = paste0(pat, "."), all.files = F, full.names = F, recursive = T)
   
   message(paste("QTL mapping files found:", length(names)))
   message("Reading QTL mapping files...")
@@ -248,10 +248,13 @@ QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot = NULL, GFF = NULL, vers
 
 ###### Example(s) ######
 # Set arguments
-# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/All/"
 # Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
-# pat <- "QTL_LOD_Intervals."
+# pat <- "LodIntervals"
 # wdyw <- "gene"
+# annot <- "Mesculenta_305_v6.1.annotation_info.txt"
+# GFF <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
+# version <- "6.1"
 
 # Run function
 # QTL_Annotation(Wdir, Ddir, pat, wdyw)
