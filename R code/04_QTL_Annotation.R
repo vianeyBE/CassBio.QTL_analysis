@@ -17,7 +17,8 @@
 
 
 ###### To do ######
-# 
+# 1: Add QTL-Trait name
+# 2: Update single QTL annotation
 
 
 
