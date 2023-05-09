@@ -114,10 +114,10 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   message("Finding peaks...")
   
   # Estimate picks 
-  peaks <- (summary(object = out, perms = out.perm, format = "allpheno", 
-                    threshold = as.numeric(lod.threshold[,2]))) %>% 
+  peaks <- summary(object = out, perms = out.perm, format = "allpheno", 
+                    threshold = as.numeric(lod.threshold[,2])) %>% 
     melt(id.vars = c("chr", "pos"), value.name = "lod", variable.name = "phenotype") %>%
-    merge(lod.threshold, by = "phenotype", suffixes = c("", ".threshold") ) %>% 
+    merge(lod.threshold, by = "phenotype", suffixes = c("", ".threshold")) %>% 
     subset(lod > lod.threshold)
   
   peaks$pheno_num <- peaks$phenotype
@@ -215,8 +215,8 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   
   for (i in 1:dim(lodint)[1]){
     
-    mar <- find.marker(cross, chr=lodint$chr[i], pos = lodint$max.pos[i])
-    eff <- effectplot(cross, mname1=mar, pheno.col = lodint$pheno_num[i] + 1, draw = F)
+    mar <- find.marker(cross, chr = lodint$chr[i], pos = lodint$max.pos[i])
+    eff <- effectplot(cross, mname1 = mar, pheno.col = lodint$pheno_num[i] + 1, draw = F)
     qtl.effects$additive[i] <- (eff[["Means"]][1] - eff[["Means"]][4])/2
     qtl.effects$dominance[i] <-
       (eff[["Means"]][2] + eff[["Means"]][3])/2 - (eff[["Means"]][1] + eff[["Means"]][4])/2
