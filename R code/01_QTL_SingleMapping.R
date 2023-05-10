@@ -7,27 +7,33 @@
 # Arguments:
 # 1. Single QTL function:
 # dir: Directory (dir) to save results
-# dircross: dir where data is located. It can be empty if the cross files include the path and name
-# dirfun: dir were functions for plotting are located
-# locfile: .loc file name. It can include the path
-# mapfile: .map file name. It can include the path
-# phenofile: .qua file name. It can include the path
-# prefixResults: The prefix that the results will have
-# ncores: Number of cores for permutation test
+# dircross: dir where data is located. It can be empty if the cross files include the path and name.
+# dirfun: dir were functions for plotting are located.
+# locfile: .loc file name. It can include the path.
+# mapfile: .map file name. It can include the path.
+# phenofile: .qua file name. It can include the path.
+# prefixResults: The prefix that the results will have.
+# ncores: Number of cores for permutation test.
 #
 # 2 scanone function:
-# step: Step size in cM used for interval mapping (default = 0.5)
-# off.end: A value added to each end of the chromosome, to extend the genetic map (default = 0)
-# error.prob: The probability of a genotyping error (default = 0.001)
-# alpha: The significance level to use for peak detection (default = 0.1)
-# n.perm: Number of permutations to use for significance testing (default = 1000)
-# map.function: The genetic map function to use (default = "kosambi")
-# stepwidth: Method used to compute step size. Can be "fixed" or "cov" (default = "fixed")
-# model_scanone: Model used for single-QTL scan. Can be "normal", "binary" or "poisson" (default = "normal")
+# step: Step size in cM used for interval mapping (default = 0.5).
+# off.end: A value added to each end of the chromosome, to extend the genetic map (default = 0).
+# error.prob: The probability of a genotyping error (default = 0.001).
+# alpha: The significance level to use for peak detection (default = 0.1).
+# n.perm: Number of permutations to use for significance testing (default = 1000).
+# map.function: The genetic map function to use (default = "kosambi").
+# stepwidth: Method used to compute step size. Can be "fixed" or "cov" (default = "fixed").
+# model_scanone: Model used for single-QTL scan (Options: "normal", "binary" or "poisson". Default = "normal").
 
 
 
-# Function init
+##### To do #####
+# 1: Add heritability calculations
+
+
+
+# 0: Function init -------------------------------------------------------------
+
 single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefixResults, ncores,
                        step = 0.5, off.end = 0, error.prob = 0.001, alpha = 0.1, n.perm = 1000,
                        map.function = "kosambi", stepwidth = "fixed", model_scanone = "normal"){
@@ -36,12 +42,16 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   
   # 1: Loading packages and variables ------------------------------------------
   if (!require(qtl)) install.packages("qtl")
+  if (!require(reshape2)) install.packages("reshape2")
   if (!require(tidyverse)) install.packages("tidyverse")
   if (!require(snow)) install.packages("snow")
+  if (!require(viridis)) install.packages("viridis")
   
   library(qtl)
+  library(reshape2)
   library(tidyverse)
   library(snow)
+  library(viridis)
   
   options(warn = -1)
   
@@ -141,7 +151,7 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   lodint <- matrix(ncol = 10, nrow = 0)
   colnames(lodint) <- colnames_intervals
   
-  for (i in 1:dim(peaks)[1]) {
+  for (i in 1:dim(peaks)[1]){
     
     lodint.single <- lodint(out, chr = as.character(peaks$chr[i]), 
                             lodcolumn = as.numeric(peaks$pheno_num[i]), 
@@ -220,8 +230,8 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
     qtl.effects$additive[i] <- (eff[["Means"]][1] - eff[["Means"]][4])/2
     qtl.effects$dominance[i] <-
       (eff[["Means"]][2] + eff[["Means"]][3])/2 - (eff[["Means"]][1] + eff[["Means"]][4])/2
-    effectplot(cross, mname1 = mar, pheno.col = lodint$pheno_num[i]+1)
-    plotPXG(cross, marker = mar, pheno.col = lodint$pheno_num[i]+1)
+    # effectplot(cross, mname1 = mar, pheno.col = lodint$pheno_num[i]+1)
+    # plotPXG(cross, marker = mar, pheno.col = lodint$pheno_num[i]+1)
     
   }
   
@@ -261,16 +271,32 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   
   message(paste0("Saving plots at: ", outputdir, " and ", outputplot))
   
-  source(paste0(dirfun, "QTL_Analysis.singleQTL_plot.R"))
+  source(paste0(dirfun, "02_QTL_SinglePlots.R"))
   genoPlot.pdf(cross)
   missGenoPlot.pdf(cross)
   plotPhenotypes.pdf(data.pheno)
   plotLOD.pdf(out)
   
-  source(paste0(dirfun, "QTL_Analysis.singleQTL_map_plot.R") )
+  source(paste0(dirfun, "02_QTL_MapPlot.R") )
   plot.single.QTL(lodint, "Lod")
   plot.single.QTL(bayesint, "Bayes")
   
   message("Done!")
   
 }
+
+
+
+###### Example(s) ######
+# Set arguments
+# dir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+# dircross <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+# dirfun <- "D:/OneDrive - CGIAR/GitHub/CassBio.QTL_analysis/R code/"
+# locfile <- "CM8996_postmapping_v.2_2023.loc"
+# mapfile <- "CM8996_LM_2023.map"
+# phenofile <- "CM8996_metabolomic_QTL.qua"
+# prefixResults <- "CM8996_QTL"
+# ncores <- 50
+
+# Run function
+# single_qtl(dir, dircross, dirfun, locfile, mapfile, phenofile, prefixResults, ncores)
