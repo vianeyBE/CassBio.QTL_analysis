@@ -9,6 +9,13 @@
 
 
 # Load libraries
+if (!require(viridis)) install.packages("viridis")
+if (!require(reshape2)) install.packages("reshape2")
+if (!require(ggplot2)) install.packages("ggplot2")
+if (!require(lemon)) install.packages("lemon")
+if (!require(colorspace)) install.packages("colorspace")
+if (!require(cowplot)) install.packages("cowplot")
+
 library(viridis)
 library(reshape2)
 library(ggplot2)
