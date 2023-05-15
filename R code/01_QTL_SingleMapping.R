@@ -81,7 +81,7 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
                  "Number of SNPs: ", nmarker, "\n",
                  "Number of chromosomes: ", nchro, "\n"))
   
-  # ngeno <- length(levels(as.factor(cross$geno[[1]][["data"]])))
+  ngeno <- length(levels(as.factor(cross$geno[[1]][["data"]])))
   
   # Genetic map data
   data.map <- pull.map(cross, as.table = T) %>% rownames_to_column(var = 'mar')
@@ -172,7 +172,7 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
     
   }
   
-  lodint <- distinct(lodint, pheno_num, chr, start.pos, max.pos, end.pos, .keep_all = T) 
+  lodint <- distinct(lodint, pheno_num, chr, start.pos, max.pos, end.pos, .keep_all = T)
   
   # Find markers
   for (i in 1:dim(lodint)[1]){
@@ -235,7 +235,8 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
     
   }
   
-  qtl.effects$ratio <- qtl.effects$dominance/abs(qtl.effects$additive)
+  qtl.effects$ratio <- qtl.effects$dominance/abs(qtl.effects$additive) %>%
+    mutate(heritability = 1 - 10^(-(2/as.numeric(nind))*lod))
   
   
   
@@ -250,7 +251,8 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   message("Saving data...")
   
   # R Data
-  save.image(paste(prefixResults, format(Sys.Date(), "%m%d%Y"), "RData", sep = "."))
+  setwd(dir)
+  save.image(paste0(dir, prefixResults, ".RData"))
   
   # Save files
   write.table(lodint,
@@ -267,7 +269,7 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   
   
   
-  # 9: Plots -----------------------------------------------------------------
+  # 9: Plots -------------------------------------------------------------------
   
   message(paste0("Saving plots at: ", outputdir, " and ", outputplot))
   

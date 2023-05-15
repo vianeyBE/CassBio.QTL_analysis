@@ -10,6 +10,7 @@
 
 # Load libraries
 if (!require(viridis)) install.packages("viridis")
+if (!require(viridisLite)) install.packages("viridisLite")
 if (!require(reshape2)) install.packages("reshape2")
 if (!require(ggplot2)) install.packages("ggplot2")
 if (!require(lemon)) install.packages("lemon")
@@ -17,6 +18,7 @@ if (!require(colorspace)) install.packages("colorspace")
 if (!require(cowplot)) install.packages("cowplot")
 
 library(viridis)
+library(viridisLite)
 library(reshape2)
 library(ggplot2)
 library(lemon)
@@ -33,9 +35,6 @@ interleave <- function(x, y){
   as.vector(rbind(rep(x, length.out = n), rep(y, length.out = n)))
   
 }
-
-# Palette 
-# mypal.gen = plasma(ngeno)
 
 
 
@@ -55,7 +54,7 @@ genoPlot.pdf <- function(cross){
 
 genoPlot <- function(cross){
   
-  mypal.gen <- plasma(ngeno)
+  mypal.gen <- viridisLite::plasma(ngeno)
   
   # Data 
   data <- matrix(ncol = 4, nrow = 0)
@@ -152,14 +151,14 @@ missGenoPlot <- function(cross){
 plotPhenotypes.pdf <- function(data.pheno){
   
   plot_list <- list()
-  pdf(paste(outputplot, prefixResults, ".phenotype-all-2.pdf", sep = ""), onefile = T)
+  pdf(paste(outputplot, prefixResults, ".phenotype-all.pdf", sep = ""), onefile = T)
   
   for (i in 2:length(phenotypes)){
     
     # tmp <- 
       print(ggplot(data.pheno, aes(x = data.pheno[,i])) + 
               
-      # histogram and density
+      # Histogram and density
         geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
         geom_density(alpha = .2, fill = "#FF6666", size = 1, color = "#FF6666") + 
         geom_rug(aes(x = data.pheno[,i], y = 0), position = position_jitter(height = 0)) +
@@ -176,10 +175,11 @@ plotPhenotypes.pdf <- function(data.pheno){
               axis.line = element_line()) + 
         
       # Labs and limits
-        labx(x = phenotypes[i], y = "") +
+        labs(x = phenotypes[i], y = "") +
         xlim(min(na.omit(data.pheno[,i])) * 0.95, max(na.omit(data.pheno[,i])) * 1.05 ) +
         ylim(0, max(density(na.omit(data.pheno[,i]))$y) * 1.20) +
         coord_capped_cart(left = 'both'))
+    
     # plot_list[[i-1]] <- print(tmp)
   }
   
