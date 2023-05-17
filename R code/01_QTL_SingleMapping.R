@@ -235,8 +235,8 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
     
   }
   
-  qtl.effects$ratio <- qtl.effects$dominance/abs(qtl.effects$additive) %>%
-    mutate(heritability = 1 - 10^(-(2/as.numeric(nind))*lod))
+  qtl.effects$ratio <- qtl.effects$dominance/abs(qtl.effects$additive)
+  qtl.effects$heritability <- 1 - 10^(-(2/as.numeric(nind))*qtl.effects$lod)
   
   
   
