@@ -15,7 +15,7 @@
 # prefixResults: The prefix that the results will have.
 # ncores: Number of cores for permutation test.
 #
-# 2 scanone function:
+# 2. scanone function:
 # step: Step size in cM used for interval mapping (default = 0.5).
 # off.end: A value added to each end of the chromosome, to extend the genetic map (default = 0).
 # error.prob: The probability of a genotyping error (default = 0.001).
@@ -279,7 +279,7 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   plotPhenotypes.pdf(data.pheno)
   plotLOD.pdf(out)
   
-  source(paste0(dirfun, "02_QTL_MapPlot.R") )
+  source(paste0(dirfun, "02_QTL_MapPlot.R"))
   plot.single.QTL(lodint, "Lod")
   plot.single.QTL(bayesint, "Bayes")
   
@@ -293,7 +293,7 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
 # Set arguments
 # dir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
 # dircross <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
-# dirfun <- "D:/OneDrive - CGIAR/GitHub/CassBio.QTL_analysis/R code/"
+# dirfun <- "D:/OneDrive - CGIAR/GitHub/CassBio.QTL_analysis/R_code/"
 # locfile <- "CM8996_postmapping_v.2_2023.loc"
 # mapfile <- "CM8996_LM_2023.map"
 # phenofile <- "CM8996_metabolomic_QTL.qua"

@@ -5,18 +5,47 @@
 # Author: Vianey Barrera (vpbarrerae@gmail.com / v.barrera@cgiar.org)
 # 
 # Arguments:
-#
+# qtldata:
+# int_method:
 
 
 
-plot.single.QTL <- function(qtldata, int_method){
+# 0: Initial requirements ------------------------------------------------------
+
+# Load libraries
+if (!require(tidyverse)) install.packages("tidyverse")
+if (!require(RColorBrewer)) install.packages("RColorBrewer")
+if (!require(ggtext)) install.packages("ggtext")
+if (!require(reshape2)) install.packages("reshape2")
+if (!require(cowplot)) install.packages("cowplot")
+
+library(tidyverse)
+library(RColorBrewer)
+library(ggtext)
+library(reshape2)
+library(cowplot)
+
+# Set style arguments
+font <- "sans"
+interleave <- function(x, y){
   
-  library(RColorBrewer)
-  library(ggtext)
+  lx <- length(x)
+  ly <- length(y)
+  n <- max(lx, ly)
+  as.vector(rbind(rep(x, length.out = n), rep(y, length.out = n)))
+  
+}
+
+
+
+# 1: Function init -------------------------------------------------------------
+# qtldata = lodint
+# int_method = "Lod"
+plot.single.QTL <- function(qtldata, int_method){
   
   options(warn = -1)
   
-  # 1: Preparing information ---------------------------------------------------
+  # 2: Preparing information ---------------------------------------------------
   
   # Map data
   data.map <- matrix(ncol = 3, nrow = 0)
@@ -27,7 +56,7 @@ plot.single.QTL <- function(qtldata, int_method){
   colnames(chr.size) <- c("chromosome", "size")
   
   # LG names
-  nameschro = names(cross[["geno"]])
+  nameschro <- names(cross[["geno"]])
   
   for (i in c(1:nchro)){
     
@@ -47,7 +76,7 @@ plot.single.QTL <- function(qtldata, int_method){
   
   
   
-  # 2: Reading each chromosome -------------------------------------------------
+  # 3: Reading each chromosome -------------------------------------------------
 
   for (LG in unique(qtldata$chr)){
     
@@ -65,7 +94,7 @@ plot.single.QTL <- function(qtldata, int_method){
     
     
 
-    # 3: Plot chromosome -------------------------------------------------------
+    # 4: Plot chromosome -------------------------------------------------------
 
     # Axis 
     wide.chr <- 0.75
@@ -115,7 +144,7 @@ plot.single.QTL <- function(qtldata, int_method){
     
     
     
-    # 4: Plot interval and label -----------------------------------------------
+    # 5: Plot interval and label -----------------------------------------------
 
     data.qtl$xvalue <- 1 + wide.chr * 0.4 + seq(from = 0, to = 0.1 * (dim(data.qtl)[1] - 1), by = 0.1)
     
@@ -140,7 +169,7 @@ plot.single.QTL <- function(qtldata, int_method){
   
     
     
-    # 5: LOD profile -----------------------------------------------------------
+    # 6: LOD profile -----------------------------------------------------------
     
     qtl.lod.temp <- data.frame(loci =  row.names(out), chr = as.character(out$chr), pos = out[,2],
                                out[,c(data.qtl$phenotype)])
@@ -149,7 +178,7 @@ plot.single.QTL <- function(qtldata, int_method){
     
     plotLODmqm <- function(data.lod.temp){
       
-      row.names(data.lod.temp <- c())
+      # row.names(data.lod.temp <- c())
       maxlod <- max(as.data.frame(data.lod.temp[,4:dim(data.lod.temp)[2]]))
       data.lod <- melt(data.lod.temp, id.vars = c("loci", "chr", "pos"))
       data.lod.markers <- subset(data.lod, loci %in% data.map$mar)
@@ -159,7 +188,7 @@ plot.single.QTL <- function(qtldata, int_method){
       # data.lod <- melt(data.lod.temp, id.vars = c("loci", "chr", "pos"))
         
         plot.lod <- ggplot(data.lod, aes(x = pos, y = value)) + 
-          geom_line(size = 1 , aes(color = variable)) 
+          geom_line(size = 1 , aes(color = variable)) +
           geom_rug(data = data.lod.markers, aes(x = pos), sides = "b",
                    position = "jitter", alpha = 0.5, size = 0.25) + 
           scale_x_reverse(breaks = seq(0, round(max(chr.size.qtl$size), digits = -1) + 5, by = 10),
@@ -188,13 +217,13 @@ plot.single.QTL <- function(qtldata, int_method){
     
     
 
-    # 6: Combine and save plots ------------------------------------------------
+    # 7: Combine and save plots ------------------------------------------------
     
     qtls.plot <- plot_grid(qtl.map, plot.lod, rel_widths = c(0.7, 1))
     
     save_plot(plot = qtls.plot, base_height = 30,
-              filename = paste(outputplot, prefixResults, ".single_qtl.", LG, ".",
-                               int_method, ".pdf", sep = ""))
+              filename = paste0(outputplot, prefixResults, ".single_qtl.", LG, ".",
+                               int_method, ".pdf"))
     
   }
   

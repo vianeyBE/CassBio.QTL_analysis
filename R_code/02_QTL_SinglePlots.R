@@ -5,8 +5,20 @@
 # Author: Vianey Barrera (vpbarrerae@gmail.com / v.barrera@cgiar.org)
 # 
 # Arguments:
+# 1 - 2. Genotypes and missing genotypes plots:
+# cross: 
 #
+# 3. Phenotypes plots:
+# data.pheno: 
+#
+# 4. LOD score profile plots:
+# data.lod.temp: 
+# out: 
+# phenotypeName: 
 
+
+
+# 0: Initial requirements ------------------------------------------------------
 
 # Load libraries
 if (!require(viridis)) install.packages("viridis")
@@ -25,7 +37,7 @@ library(lemon)
 library(colorspace)
 library(cowplot) 
 
-# 
+# Set style arguments
 font <- "sans"
 interleave <- function(x, y){
   
