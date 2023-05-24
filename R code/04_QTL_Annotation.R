@@ -17,8 +17,8 @@
 
 
 ###### To do ######
-# 1: Add QTL-Trait name
-# 2: Update single QTL annotation
+# 1: Update single QTL annotation
+# 2: Add QTL-Trait name
 
 
 
@@ -253,7 +253,7 @@ QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot, GFF, version){
 # Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
 # pat <- "LodIntervals"
 # wdyw <- "gene"
-# annot <- "Mesculenta_305_v6.1.annotation_info.txt"
+# annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
 # GFF <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
 # version <- "6.1"
 

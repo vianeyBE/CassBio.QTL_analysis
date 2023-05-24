@@ -28,7 +28,7 @@
 
 
 ##### To do #####
-# 1: Add heritability calculations
+# 
 
 
 
