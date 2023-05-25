@@ -271,17 +271,17 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   
   # 9: Plots -------------------------------------------------------------------
   
-  # message(paste0("Saving plots at: ", outputdir, " and ", outputplot))
+  message(paste0("Saving plots at: ", outputdir, " and ", outputplot))
   
-  # source(paste0(dirfun, "02_QTL_SinglePlots.R"))
-  # genoPlot.pdf(cross)
-  # missGenoPlot.pdf(cross)
-  # plotPhenotypes.pdf(data.pheno)
-  # plotLOD.pdf(out)
+  source(paste0(dirfun, "02_QTL_SinglePlots.R"))
+  genoPlot.pdf(cross)
+  missGenoPlot.pdf(cross)
+  plotPhenotypes.pdf(data.pheno)
+  plotLOD.pdf(out)
   
-  # source(paste0(dirfun, "02_QTL_MapPlot.R"))
-  # plot.single.QTL(lodint, "Lod")
-  # plot.single.QTL(bayesint, "Bayes")
+  source(paste0(dirfun, "02_QTL_MapPlot.R"))
+  plot.single.QTL(lodint, "Lod")
+  plot.single.QTL(bayesint, "Bayes")
   
   message("Done!")
   
