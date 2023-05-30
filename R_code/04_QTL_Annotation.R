@@ -8,11 +8,12 @@
 # Arguments:
 # Wdir: Name of the directory that contains the GAPIT results. For example: home/user/folder.
 # Ddir: Directory where is located the annotation files (annot, GFF files).
-# pat: Enter the path of file names to look for. For example: QTL_LOD_Intervals.
+# name: Enter the path or the name of file names to look for. For example: QTL_LOD_Intervals.
 # wdyw: Enter what are you looking for to annotate (Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR).
 # annot: Annotation details of the genes. txt file from the genome version used for alignment.
 # GFF: gff3 file from the genome version used for alignment.
 # version: You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1).
+# recursive: A Boolean string that determines if the function is recursive or only searches one file (Default = F).
 
 
 
@@ -24,7 +25,7 @@
 
 # 0: Function init -------------------------------------------------------------
 
-QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot, GFF, version){
+QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursive = F){
   
   # 1: Load all the directories, info, and data --------------------------------
   
@@ -86,30 +87,55 @@ QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot, GFF, version){
   
   
   
-  # 2: Find all the CSVs with the results and filter them ----------------------
+  # 2: Find the CSV(s) with the results and filter them ------------------------
   
-  message("Getting list of CSV files...")
-  
-  # Get the names of the files
-  setwd(Wdir)
-  names <- list.files(path = Wdir, pattern = paste0(pat, "."), all.files = F, full.names = F, recursive = T)
-  
-  message(paste("QTL mapping files found:", length(names)))
-  message("Reading QTL mapping files...")
-  
-  # Create an empty list and the variable to iterate
-  # Read, rename, modify and save all the csv files in the list
-  csvL <- list()
-  p <- 0
-  
-  # Loop to find QTL files
-  for (i in 1:length(names)){
+  if (recursive == T){
     
-    # Iterator
-    p <- p + 1
+    message("Getting list of CSV files...")
     
-    # Database handling 
-    csvL[[i]] <- read.delim(paste0(Wdir, "/", names[p])) %>%
+    # Get the names of the files
+    setwd(Wdir)
+    names <- list.files(path = Wdir, pattern = paste0(name, "."), all.files = F, full.names = F, recursive = T)
+    
+    message(paste("QTL mapping files found:", length(names)))
+    message("Reading QTL mapping files...")
+    
+    # Create an empty list and the variable to iterate
+    # Read, rename, modify and save all the csv files in the list
+    csvL <- list()
+    p <- 0
+    
+    # Loop to find QTL files
+    for (i in 1:length(names)){
+      
+      # Iterator
+      p <- p + 1
+      
+      # Database handling 
+      csvL[[i]] <- read.delim(paste0(Wdir, "/", names[p])) %>%
+        select(phenotype, chr, lod, start.marker, end.marker) %>%
+        mutate(start = start.marker) %>%
+        tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_")) %>%
+        mutate(end = end.marker) %>%
+        tidyr::separate(col = end, into = c("na", "End"), sep = paste("_")) %>%
+        select(phenotype, chr, lod, start.marker, end.marker, Start, End) %>%
+        rename(Phenotype = phenotype, Chr = chr, LOD = lod, Start.Marker = start.marker, End.Marker = end.marker)
+      
+      # Progress bar
+      cat('\r', i, ' files processed |', rep('=', i / 4), ifelse(i == length(names), '|\n', '>'), sep = '')
+      
+    }
+    
+    # Merge the data frames of the list in a single data frame
+    QTL <- bind_rows(csvL)
+    QTL_s <- QTL %>% group_by(Chr) %>% summarise("QTL.Start" = min(Start), "QTL.End" = max(End))
+    
+  } else {
+    
+    # Read the files with the results
+    setwd(Wdir)
+    
+    QTL <- read.csv(paste0(name)) %>%
       select(phenotype, chr, lod, start.marker, end.marker) %>%
       mutate(start = start.marker) %>%
       tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_")) %>%
@@ -118,16 +144,13 @@ QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot, GFF, version){
       select(phenotype, chr, lod, start.marker, end.marker, Start, End) %>%
       rename(Phenotype = phenotype, Chr = chr, LOD = lod, Start.Marker = start.marker, End.Marker = end.marker)
     
-    # Progress bar
-    cat('\r', i, ' files processed |', rep('=', i / 4), ifelse(i == length(names), '|\n', '>'), sep = '')
+    QTL_s <- QTL %>% group_by(Chr) %>% summarise("QTL.Start" = min(Start), "QTL.End" = max(End))
     
   }
   
-  # Merge the data frames of the list in a single data frame
-  QTL <- bind_rows(csvL)
-  QTL_s <- QTL %>% group_by(Chr) %>% summarise("QTL.Start" = min(Start), "QTL.End" = max(End))
+  # Informative message
+  message(paste("There are", dim(QTL)[1], "QTLs to annotate"))
   
-  message(paste("There are", dim(QTL_s)[1], "QTLs after filtering"))
   
   
   # 3: Match the results with the gene annotation database ---------------------
@@ -235,7 +258,7 @@ QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot, GFF, version){
     
     write.csv(QTL_annotation, file = "QTL_Annotation.csv", quote = F, row.names = F)
     
-    message("Done! ")
+    message("Done!")
     
   } else {
     
@@ -249,13 +272,15 @@ QTL_Annotation <- function(Wdir, Ddir, pat, wdyw, annot, GFF, version){
 
 ###### Example(s) ######
 # Set arguments
-# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/All/"
+# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/All_metabolites/"
 # Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
-# pat <- "LodIntervals"
+# name <- "LodIntervals"
+# name <- "QTL_results_heritability.csv"
 # wdyw <- "gene"
 # annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
 # GFF <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
 # version <- "6.1"
+# recursive <- "F"
 
 # Run function
-# QTL_Annotation(Wdir, Ddir, pat, wdyw)
+# QTL_Annotation(Wdir, Ddir, name, wdyw, recursive)
