@@ -13,19 +13,20 @@
 # annot: Annotation details of the genes. txt file from the genome version used for alignment.
 # GFF: gff3 file from the genome version used for alignment.
 # version: You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1).
-# recursive: A Boolean string that determines if the function is recursive or only searches one file (Default = F).
+# recursive: A Boolean string that determines if the function should perform a recursive search or not (Default = F).
 
 
 
 ###### To do ######
-# 1: Update single QTL annotation
-# 2: Add QTL-Trait name
+# 1: Include trait name to QTL annotation (QTL object)
 
 
 
 # 0: Function init -------------------------------------------------------------
 
 QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursive = F){
+  
+  
   
   # 1: Load all the directories, info, and data --------------------------------
   
@@ -35,9 +36,9 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
   
   # Load annotation data and re-organize it
   
-  message("Loading required files to do the annotation")
-  
   if (version == 6.1){
+    
+    message("Loading required files to do the annotation")
     
     # Set working directory where files are located
     setwd(Ddir)
@@ -61,6 +62,8 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
       dplyr::filter(What %in% wdyw)
     
   } else {
+    
+    message("Loading required files to do the annotation")
     
     # Set working directory where files are located
     setwd(Ddir)
@@ -128,7 +131,12 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
     
     # Merge the data frames of the list in a single data frame
     QTL <- bind_rows(csvL)
-    QTL_s <- QTL %>% group_by(Chr) %>% summarise("QTL.Start" = min(Start), "QTL.End" = max(End))
+    QTL$Start <- as.numeric(QTL$Start)
+    QTL$End <- as.numeric(QTL$End)
+    
+    QTL_s <- QTL %>% group_by(Chr) %>%
+      summarise("QTL.Start" = min(Start), "QTL.End" = max(End)) %>%
+      mutate(QTL.Wide = QTL.End - QTL.Start)
     
   } else {
     
@@ -138,28 +146,132 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
     QTL <- read.csv(paste0(name)) %>%
       select(phenotype, chr, lod, start.marker, end.marker) %>%
       mutate(start = start.marker) %>%
-      tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_")) %>%
+      tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_"), extra = "drop") %>%
       mutate(end = end.marker) %>%
-      tidyr::separate(col = end, into = c("na", "End"), sep = paste("_")) %>%
+      tidyr::separate(col = end, into = c("na", "End"), sep = paste("_"), extra = "drop") %>%
       select(phenotype, chr, lod, start.marker, end.marker, Start, End) %>%
       rename(Phenotype = phenotype, Chr = chr, LOD = lod, Start.Marker = start.marker, End.Marker = end.marker)
     
-    QTL_s <- QTL %>% group_by(Chr) %>% summarise("QTL.Start" = min(Start), "QTL.End" = max(End))
+    QTL$Start <- as.numeric(QTL$Start)
+    QTL$End <- as.numeric(QTL$End)
+    
+    QTL_s <- QTL %>% group_by(Chr) %>%
+      summarise("QTL.Start" = min(Start), "QTL.End" = max(End)) %>%
+      mutate(QTL.Wide = QTL.End - QTL.Start)
     
   }
   
-  # Informative message
-  message(paste("There are", dim(QTL)[1], "QTLs to annotate"))
   
   
-  
-  # 3: Match the results with the gene annotation database ---------------------
+  # 3: Match the QTL results with the gene annotation database -----------------
   
   # Creates a conditional
-  # If there is at least one result of the GWAS models, the annotation is done
-  if (dim(QTL_s)[1] > 0){
+  # If there is at least one result of the GWAS models, the annotation continues
+  if (dim(QTL)[1] > 0){
     
-    message("Retriving annotation...")
+    message(paste("There are", dim(QTL)[1], "QTLs to annotate"))
+    
+    
+    
+    # 3.1 Function path for individual QTLs (QTL) ------------------------------
+    
+    # 3.1.1  ----------------------------
+    
+    # Creates the objects to perform the loop
+    p <- 0
+    annotL <- list()
+    
+    # Loop
+    for (i in 1:nrow(QTL)){
+      
+      # Iterator
+      p <- p + 1
+      
+      # 
+      data <- dplyr::filter(GFF, QTL$Chr[p] == Chr)
+      
+      # 
+      annotL[[i]] <- rbind(
+        
+        # Looking for genes located inside the QTL
+        dplyr::filter(data, QTL$Start[p] <= Start & QTL$Start[p] <= End &
+                        QTL$End[p] >= Start & QTL$End[p] >= End) %>%
+          mutate(QTL.Start = QTL$Start[p], QTL.End = QTL$End[p],
+                 Location = "Gene inside QTL") %>%
+          rename(Gen.Start = Start, Gen.End = End),
+        
+        # Looking for genes that contain the QTL
+        dplyr::filter(data, QTL$Start[p] >= Start & QTL$Start[p] <= End &
+                        QTL$End[p] >= Start & QTL$End[p] <= End) %>%
+          mutate(QTL.Start = QTL$Start[p], QTL.End = QTL$End[p],
+                 Location = "QTL inside gene") %>%
+          rename(Gen.Start = Start, Gen.End = End),
+        
+        # Looking genes down stream 
+        dplyr::filter(data, QTL$Start[p] >= Start & QTL$Start[p] <= End) %>%
+          mutate(QTL.Start = QTL$Start[p], QTL.End = QTL$End[p],
+                 Location = "Gene overlaps QTL") %>%
+          rename(Gen.Start = Start, Gen.End = End),
+        
+        # Looking genes up stream
+        dplyr::filter(data, QTL$End[p] >= Start & QTL$End[p] <= End) %>%
+          mutate(QTL.Start = QTL$Start[p], QTL.End = QTL$End[p],
+                 Location = "Gene overlaps QTL") %>%
+          rename(Gen.Start = Start, Gen.End = End)
+        
+      )
+      
+      # Progress bar
+      cat('\r', i, ' files processed |', rep('=', i / 4), 
+          ifelse(i == nrow(QTL), '|\n', '>'), sep = '')
+      
+    }
+    
+    # Merge the data frames of the list in a single data frame and modify it
+    annotLs <- bind_rows(annotL)
+    
+    message(paste("There are", dim(annotLs)[1], "genes that overlap with QTLs"))
+    
+    
+    
+    # 3.2.2: Formatting dataframe ----------------------------------------------
+    
+    message("Obtaining gene information...")
+    
+    # Creates the objects to perform the loop
+    p <- 0
+    gffL <- list()
+    
+    # Loop
+    for (i in 1:nrow(annotLs)){
+      
+      # Iterator
+      p <- p + 1
+      
+      #
+      gffL[[i]] <- filter(annot,
+                          Locus == annotLs$Name[p] |
+                            Trans == annotLs$Name[p] |
+                              Peptide == annotLs$Name[p]) %>%
+        mutate(Chr = annotLs$Chr[p], 
+               Gen.Start = annotLs$Gen.Start[p], Gen.End = annotLs$Gen.End[p],
+               QTL.Start = annotLs$QTL.Start[p], QTL.End = annotLs$QTL.End[p], 
+               Location = annotLs$Location[p])
+      
+      # Progress bar
+      cat('\r', i, ' rows processed |', rep('=', i / 10), ifelse(i == nrow(annotLs), '|\n', '>'), sep = '')
+      
+    }
+    
+    # Merge the data frames of the list in a single data frame and modify it
+    QTL_a <- bind_rows(gffL) %>% 
+      select(Chr, Locus, Gen.Start, Gen.End, GO, AT.name, AT.define, QTL.Start, QTL.End, Location)
+    
+    
+    
+    # 3.2 Function path for merged QTLs (QTL_s) --------------------------------
+    
+    # 3.2.1  ------------------------------
     
     # Creates the objects to perform the loop
     p <- 0
@@ -175,7 +287,7 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
       data <- dplyr::filter(GFF, QTL_s$Chr[p] == Chr)
       
       # 
-      annotL[[i]] <- rbind(
+      annotLm[[i]] <- rbind(
         
         # Looking for genes located inside the QTL
         dplyr::filter(data, QTL_s$QTL.Start[p] <= Start & QTL_s$QTL.Start[p] <= End &
@@ -211,13 +323,13 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
     }
     
     # Merge the data frames of the list in a single data frame
-    annotLm <- bind_rows(annotL)
+    annotLmm <- bind_rows(annotLm)
     
     message(paste("There are", dim(annotLm)[1], "genes that overlap with QTLs"))
     
     
     
-    # 4: Formatting dataframe --------------------------------------------------
+    # 3.2.2: Formatting dataframe ----------------------------------------------
     
     message("Obtaining gene information...")
     
@@ -226,20 +338,20 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
     gffL <- list()
     
     # Loop
-    for (i in 1:nrow(annotLm)){
+    for (i in 1:nrow(annotLmm)){
       
       # Iterator
       p <- p + 1
       
       #
       gffL[[i]] <- filter(annot,
-                          Locus == annotLm$Name[p] |
-                            Trans == annotLm$Name[p] |
-                            Peptide == annotLm$Name[p]) %>%
-        mutate(Chr = annotLm$Chr[p], 
-               Gen.Start = annotLm$Gen.Start[p], Gen.End = annotLm$Gen.End[p],
-               QTL.Start = annotLm$QTL.Start[p], QTL.End = annotLm$QTL.End[p], 
-               Location = annotLm$Location[p])
+                          Locus == annotLmm$Name[p] |
+                            Trans == annotLmm$Name[p] |
+                            Peptide == annotLmm$Name[p]) %>%
+        mutate(Chr = annotLmm$Chr[p], 
+               Gen.Start = annotLmm$Gen.Start[p], Gen.End = annotLmm$Gen.End[p],
+               QTL.Start = annotLmm$QTL.Start[p], QTL.End = annotLmm$QTL.End[p], 
+               Location = annotLmm$Location[p])
       
       # Progress bar
       cat('\r', i, ' rows processed |', rep('=', i / 5), ifelse(i == nrow(annotLm), '|\n', '>'), sep = '')
@@ -247,16 +359,17 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
     }
     
     # Merge the data frames of the list in a single data frame and modify it
-    QTL_annotation <- bind_rows(gffL) %>% 
+    QTL_m_a <- bind_rows(gffL) %>% 
       select(Chr, Locus, Gen.Start, Gen.End, GO, AT.name, AT.define, QTL.Start, QTL.End, Location)
     
     
     
-    # 5: Save output -----------------------------------------------------------
+    # 4: Save the outputs --------------------------------------------------------
     
-    message("Saving output file: 'QTL_Annotation.csv' in working directory")
+    message("Saving output files as: 'QTL_annotation.csv' and 'QTL_merged_annotation.csv'")
     
-    write.csv(QTL_annotation, file = "QTL_Annotation.csv", quote = F, row.names = F)
+    write.csv(QTL_a, file = "QTL_merged_annotation.csv", quote = F, row.names = F)
+    write.csv(QTL_m_a, file = "QTL_merged_annotation.csv", quote = F, row.names = F)
     
     message("Done!")
     
@@ -273,6 +386,7 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
 ###### Example(s) ######
 # Set arguments
 # Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/All_metabolites/"
+# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Significant_ones/"
 # Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
 # name <- "LodIntervals"
 # name <- "QTL_results_heritability.csv"
