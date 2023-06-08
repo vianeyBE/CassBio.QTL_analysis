@@ -47,7 +47,7 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
       rename(ID = 1, Locus = 2, Trans = 3, Peptide = 4, GO = 10, AT.name = 12, AT.define = 13) %>%
       select(ID, Locus, Trans, Peptide, GO, AT.name, AT.define)
     
-    GFF <- read.delim(GFF, header = F, comment.char = "#") %>%
+    gff <- read.delim(gff, header = F, comment.char = "#") %>%
       rename(Chr = V1, What = V3, Start = V4, End = V5) %>%
       tidyr::separate(col = V9, into = c("ID", "na"), sep = ";") %>%
       tidyr::separate(col = ID, into = c("na2", "na3"), sep = "=") %>%
@@ -72,7 +72,7 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
       rename(ID = 1, Locus = 2, Trans = 3, Peptide = 4, GO = 10, AT.name = 11, AT.define = 12) %>%
       select(ID, Locus, Trans, Peptide, GO, AT.name, AT.define)
     
-    GFF <- read.delim(GFF, header = F, comment.char = "#") %>%
+    gff <- read.delim(gff, header = F, comment.char = "#") %>%
       rename(Chr = V1, What = V3, Start = V4, End = V5) %>%
       tidyr::separate(col = V9, into = c("ID", "na"), sep = ";") %>%
       tidyr::separate(col = ID, into = c("na2", "na3"), sep = "=") %>%
@@ -105,24 +105,21 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
     
     # Create an empty list and the variable to iterate
     # Read, rename, modify and save all the csv files in the list
-    csvL <- list()
-    p <- 0
+    csv_L <- list()
     
     # Loop to find QTL files
     for (i in 1:length(names)){
       
-      # Iterator
-      p <- p + 1
-      
       # Database handling 
-      csvL[[i]] <- read.delim(paste0(Wdir, "/", names[p])) %>%
+      csv_L[[i]] <- read.delim(paste0(Wdir, "/", names[i])) %>%
         select(phenotype, chr, lod, start.marker, end.marker) %>%
         mutate(start = start.marker) %>%
         tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_")) %>%
         mutate(end = end.marker) %>%
         tidyr::separate(col = end, into = c("na", "End"), sep = paste("_")) %>%
         select(phenotype, chr, lod, start.marker, end.marker, Start, End) %>%
-        rename(Phenotype = phenotype, Chr = chr, LOD = lod, Start.Marker = start.marker, End.Marker = end.marker)
+        rename(Phenotype = phenotype, Chr = chr, LOD = lod,
+               Start.Marker = start.marker, End.Marker = end.marker)
       
       # Progress bar
       cat('\r', i, ' files processed |', rep('=', i / 4), ifelse(i == length(names), '|\n', '>'), sep = '')
@@ -130,11 +127,12 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
     }
     
     # Merge the data frames of the list in a single data frame
-    QTL <- bind_rows(csvL)
-    QTL$Start <- as.numeric(QTL$Start)
-    QTL$End <- as.numeric(QTL$End)
+    s_QTL <- bind_rows(csv_L)
+    s_QTL$Start <- as.numeric(s_QTL$Start)
+    s_QTL$End <- as.numeric(s_QTL$End)
     
-    QTL_s <- QTL %>% group_by(Chr) %>%
+    # Generates the merged QTL data frame
+    m_QTL <- s_QTL %>% group_by(Chr) %>%
       summarise("QTL.Start" = min(Start), "QTL.End" = max(End)) %>%
       mutate(QTL.Wide = QTL.End - QTL.Start)
     
@@ -143,19 +141,20 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
     # Read the files with the results
     setwd(Wdir)
     
-    QTL <- read.csv(paste0(name)) %>%
+    s_QTL <- read.csv(paste0(name)) %>%
       select(phenotype, chr, lod, start.marker, end.marker) %>%
       mutate(start = start.marker) %>%
       tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_"), extra = "drop") %>%
       mutate(end = end.marker) %>%
       tidyr::separate(col = end, into = c("na", "End"), sep = paste("_"), extra = "drop") %>%
       select(phenotype, chr, lod, start.marker, end.marker, Start, End) %>%
-      rename(Phenotype = phenotype, Chr = chr, LOD = lod, Start.Marker = start.marker, End.Marker = end.marker)
+      rename(Phenotype = phenotype, Chr = chr, LOD = lod,
+             Start.Marker = start.marker, End.Marker = end.marker)
     
-    QTL$Start <- as.numeric(QTL$Start)
-    QTL$End <- as.numeric(QTL$End)
+    s_QTL$Start <- as.numeric(s_QTL$Start)
+    s_QTL$End <- as.numeric(s_QTL$End)
     
-    QTL_s <- QTL %>% group_by(Chr) %>%
+    m_QTL <- s_QTL %>% group_by(Chr) %>%
       summarise("QTL.Start" = min(Start), "QTL.End" = max(End)) %>%
       mutate(QTL.Wide = QTL.End - QTL.Start)
     
@@ -163,213 +162,206 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
   
   
   
-  # 3: Match the QTL results with the gene annotation database -----------------
+  # 3: Match the QTL results with the gene annotation databases ----------------
   
-  # Creates a conditional
-  # If there is at least one result of the GWAS models, the annotation continues
-  if (dim(QTL)[1] > 0){
+  # Conditional: If there is at least one QTL to annotate, the function continues
+  if (dim(s_QTL)[1] > 0){
     
-    message(paste("There are", dim(QTL)[1], "QTLs to annotate"))
-    
-    
-    
-    # 3.1 Function path for individual QTLs (QTL) ------------------------------
-    
-    # 3.1.1  ----------------------------
-    
-    # Creates the objects to perform the loop
-    p <- 0
-    annotL <- list()
-    
-    # Loop
-    for (i in 1:nrow(QTL)){
-      
-      # Iterator
-      p <- p + 1
-      
-      # 
-      data <- dplyr::filter(GFF, QTL$Chr[p] == Chr)
-      
-      # 
-      annotL[[i]] <- rbind(
-        
-        # Looking for genes located inside the QTL
-        dplyr::filter(data, QTL$Start[p] <= Start & QTL$Start[p] <= End &
-                        QTL$End[p] >= Start & QTL$End[p] >= End) %>%
-          mutate(QTL.Start = QTL$Start[p], QTL.End = QTL$End[p],
-                 Location = "Gene inside QTL") %>%
-          rename(Gen.Start = Start, Gen.End = End),
-        
-        # Looking for genes that contain the QTL
-        dplyr::filter(data, QTL$Start[p] >= Start & QTL$Start[p] <= End &
-                        QTL$End[p] >= Start & QTL$End[p] <= End) %>%
-          mutate(QTL.Start = QTL$Start[p], QTL.End = QTL$End[p],
-                 Location = "QTL inside gene") %>%
-          rename(Gen.Start = Start, Gen.End = End),
-        
-        # Looking genes down stream 
-        dplyr::filter(data, QTL$Start[p] >= Start & QTL$Start[p] <= End) %>%
-          mutate(QTL.Start = QTL$Start[p], QTL.End = QTL$End[p],
-                 Location = "Gene overlaps QTL") %>%
-          rename(Gen.Start = Start, Gen.End = End),
-        
-        # Looking genes up stream
-        dplyr::filter(data, QTL$End[p] >= Start & QTL$End[p] <= End) %>%
-          mutate(QTL.Start = QTL$Start[p], QTL.End = QTL$End[p],
-                 Location = "Gene overlaps QTL") %>%
-          rename(Gen.Start = Start, Gen.End = End)
-        
-      )
-      
-      # Progress bar
-      cat('\r', i, ' files processed |', rep('=', i / 4), 
-          ifelse(i == nrow(QTL), '|\n', '>'), sep = '')
-      
-    }
-    
-    # Merge the data frames of the list in a single data frame and modify it
-    annotLs <- bind_rows(annotL)
-    
-    message(paste("There are", dim(annotLs)[1], "genes that overlap with QTLs"))
+    message(paste("There are", dim(s_QTL)[1], "QTLs to annotate"))
     
     
     
-    # 3.2.2: Formatting dataframe ----------------------------------------------
+    # 3.1 Function pathway for single QTLs (s_QTL) -----------------------------
+    
+    # 3.1.1 Starts filtering the gff3 data -------------------------------------
     
     message("Obtaining gene information...")
     
-    # Creates the objects to perform the loop
-    p <- 0
-    gffL <- list()
+    # Creates an empty list object to save the data
+    s_gff_l <- list()
     
-    # Loop
-    for (i in 1:nrow(annotLs)){
+    # Filters and merges the gff3 data
+    for (i in 1:nrow(s_QTL)){
       
-      # Iterator
-      p <- p + 1
+      # Filter the gff3 file per chromosome
+      data <- dplyr::filter(gff, s_QTL$Chr[i] == Chr)
       
-      #
-      gffL[[i]] <- filter(annot,
-                          Locus == annotLs$Name[p] |
-                            Trans == annotLs$Name[p] |
-                              Peptide == annotLs$Name[p]) %>%
-        mutate(Chr = annotLs$Chr[p], 
-               Gen.Start = annotLs$Gen.Start[p], Gen.End = annotLs$Gen.End[p],
-               QTL.Start = annotLs$QTL.Start[p], QTL.End = annotLs$QTL.End[p], 
-               Location = annotLs$Location[p])
+      # Combine the different filtered data
+      s_gff_l[[i]] <- rbind(
+        
+        # Looking for genes located inside the QTL
+        dplyr::filter(data, s_QTL$Start[i] <= Start & s_QTL$Start[i] <= End &
+                        s_QTL$End[i] >= Start & s_QTL$End[i] >= End) %>%
+          mutate(Trait = s_QTL$Phenotype[i], LOD = s_QTL$LOD[i], Location = "Gene inside QTL",
+                 QTL.Start = s_QTL$Start[i], QTL.End = s_QTL$End[i]) %>%
+          rename(Gen.Start = Start, Gen.End = End),
+        
+        # Looking for genes that contain the QTL
+        dplyr::filter(data, s_QTL$Start[i] >= Start & s_QTL$Start[i] <= End &
+                        s_QTL$End[i] >= Start & s_QTL$End[i] <= End) %>%
+          mutate(Trait = s_QTL$Phenotype[i], LOD = s_QTL$LOD[i], Location = "Gene inside QTL",
+                 QTL.Start = s_QTL$Start[i], QTL.End = s_QTL$End[i]) %>%
+          rename(Gen.Start = Start, Gen.End = End),
+        
+        # Looking genes down stream 
+        dplyr::filter(data, s_QTL$Start[i] >= Start & s_QTL$Start[i] <= End) %>%
+          mutate(Trait = s_QTL$Phenotype[i], LOD = s_QTL$LOD[i], Location = "Gene overlaps QTL",
+                 QTL.Start = s_QTL$Start[i], QTL.End = s_QTL$End[i]) %>%
+          rename(Gen.Start = Start, Gen.End = End),
+        
+        # Looking genes up stream
+        dplyr::filter(data, s_QTL$End[i] >= Start & s_QTL$End[i] <= End) %>%
+          mutate(Trait = s_QTL$Phenotype[i], LOD = s_QTL$LOD[i], Location = "Gene overlaps QTL",
+                 QTL.Start = s_QTL$Start[i], QTL.End = s_QTL$End[i]) %>%
+          rename(Gen.Start = Start, Gen.End = End)
+        
+      )
       
       # Progress bar
-      cat('\r', i, ' rows processed |', rep('=', i / 10), ifelse(i == nrow(annotLs), '|\n', '>'), sep = '')
+      cat('\r', i, ' files processed |', rep('=', i / 4), ifelse(i == nrow(s_QTL), '|\n', '>'), sep = '')
       
     }
     
+    # Merge all the data frames of the list in a unique data frame
+    s_gff_m <- bind_rows(s_gff_l) %>%
+      select(Trait, Chr, LOD, QTL.Start, QTL.End, What, Name, Location, Gen.Start, Gen.End)
+    
+    
+    
+    # 3.2.2 Continues filtering the annotation data ----------------------------
+    
+    message("Obtaining gene annotation...")
+    
+    # Creates an empty list object to save the data
+    s_annot_l <- list()
+    
+    # Filters and merges the annot data
+    for (i in 1:nrow(s_gff_m)){
+      
+      # Filter the annotation data and creates new columns based on previous data
+      s_annot_l[[i]] <- filter(annot,
+                                Locus == s_gff_m$Name[i] |
+                                  Trans == s_gff_m$Name[i] |
+                                    Peptide == s_gff_m$Name[i]) %>%
+        mutate(Trait =s_gff_m$Trait[i], Chr = s_gff_m$Chr[i], LOD = s_gff_m$LOD[i],
+               QTL.Start = s_gff_m$QTL.Start[i], QTL.End = s_gff_m$QTL.End[i],
+               What = s_gff_m$What[i], Location = s_gff_m$Location[i],
+               Gen.Start = s_gff_m$Gen.Start[i], Gen.End = s_gff_m$Gen.End[i])
+      
+      # Progress bar
+      cat('\r', i, ' rows processed |', rep('=', i / 10), ifelse(i == nrow(s_gff_m), '|\n', '>'), sep = '')
+      
+    }
+    
+    
+    
+    # 3.2.3 It ends by formatting the data frame -------------------------------
+    
     # Merge the data frames of the list in a single data frame and modify it
-    QTL_a <- bind_rows(gffL) %>% 
-      select(Chr, Locus, Gen.Start, Gen.End, GO, AT.name, AT.define, QTL.Start, QTL.End, Location)
+    s_QTL_annotation <- bind_rows(s_annot_l) %>%
+      select(Trait, Chr, LOD, QTL.Start, QTL.End, What, ID, Locus, Trans, Peptide, Location, 
+             Gen.Start, Gen.End, GO, AT.name, AT.define)
     
     
     
-    # 3.2 Function path for merged QTLs (QTL_s) --------------------------------
+    # 3.2 Function pathway for merged QTLs (m_QTL) -----------------------------
     
-    # 3.2.1  ------------------------------
+    # 3.2.1 Starts filtering the gff3 data -------------------------------------
     
-    # Creates the objects to perform the loop
-    p <- 0
-    annotL <- list()
+    message("Obtaining gene information...")
     
-    # Loop
-    for (i in 1:nrow(QTL_s)){
+    # Creates an empty list object to save the data
+    m_gff_l <- list()
+    
+    # Filters and merges the gff3 data
+    for (i in 1:nrow(m_QTL)){
       
-      # Iterator
-      p <- p + 1
+      # Filter the gff3 file per chromosome
+      data <- dplyr::filter(gff, m_QTL$Chr[i] == Chr)
       
-      # 
-      data <- dplyr::filter(GFF, QTL_s$Chr[p] == Chr)
-      
-      # 
-      annotLm[[i]] <- rbind(
+      # Combine the different filtered data
+      m_gff_l[[i]] <- rbind(
         
         # Looking for genes located inside the QTL
-        dplyr::filter(data, QTL_s$QTL.Start[p] <= Start & QTL_s$QTL.Start[p] <= End &
-                        QTL_s$QTL.End[p] >= Start & QTL_s$QTL.End[p] >= End) %>%
-          mutate(QTL.Start = QTL_s$QTL.Start[p], QTL.End = QTL_s$QTL.End[p],
+        dplyr::filter(data, m_QTL$QTL.Start[i] <= Start & m_QTL$QTL.Start[i] <= End &
+                        m_QTL$QTL.End[i] >= Start & m_QTL$QTL.End[i] >= End) %>%
+          mutate(QTL.Start = m_QTL$QTL.Start[i], QTL.End = m_QTL$QTL.End[i],
                  Location = "Gene inside QTL") %>%
           rename(Gen.Start = Start, Gen.End = End),
         
         # Looking for genes that contain the QTL
-        dplyr::filter(data, QTL_s$QTL.Start[p] >= Start & QTL_s$QTL.Start[p] <= End &
-                        QTL_s$QTL.End[p] >= Start & QTL_s$QTL.End[p] <= End) %>%
-          mutate(QTL.Start = QTL_s$QTL.Start[p], QTL.End = QTL_s$QTL.End[p],
+        dplyr::filter(data, m_QTL$QTL.Start[i] >= Start & m_QTL$QTL.Start[i] <= End &
+                        m_QTL$QTL.End[i] >= Start & m_QTL$QTL.End[i] <= End) %>%
+          mutate(QTL.Start = m_QTL$QTL.Start[i], QTL.End = m_QTL$QTL.End[i],
                  Location = "QTL inside gene") %>%
           rename(Gen.Start = Start, Gen.End = End),
         
         # Looking genes down stream 
-        dplyr::filter(data, QTL_s$QTL.Start[p] >= Start & QTL_s$QTL.Start[p] <= End) %>%
-          mutate(QTL.Start = QTL_s$QTL.Start[p], QTL.End = QTL_s$QTL.End[p],
+        dplyr::filter(data, m_QTL$QTL.Start[i] >= Start & m_QTL$QTL.Start[i] <= End) %>%
+          mutate(QTL.Start = m_QTL$QTL.Start[i], QTL.End = m_QTL$QTL.End[i],
                  Location = "Gene overlaps QTL") %>%
           rename(Gen.Start = Start, Gen.End = End),
         
         # Looking genes up stream
-        dplyr::filter(data, QTL_s$QTL.End[p] >= Start & QTL_s$QTL.End[p] <= End) %>%
-          mutate(QTL.Start = QTL_s$QTL.Start[p], QTL.End = QTL_s$QTL.End[p],
+        dplyr::filter(data, m_QTL$QTL.End[i] >= Start & m_QTL$QTL.End[i] <= End) %>%
+          mutate(QTL.Start = m_QTL$QTL.Start[i], QTL.End = m_QTL$QTL.End[i],
                  Location = "Gene overlaps QTL") %>%
           rename(Gen.Start = Start, Gen.End = End)
         
       )
       
       # Progress bar
-      cat('\r', i, ' files processed |', rep('=', i / 4), ifelse(i == nrow(QTL_s), '|\n', '>'), sep = '')
+      cat('\r', i, ' files processed |', rep('=', i / 1), ifelse(i == nrow(m_QTL), '|\n', '>'), sep = '')
       
     }
     
     # Merge the data frames of the list in a single data frame
-    annotLmm <- bind_rows(annotLm)
-    
-    message(paste("There are", dim(annotLm)[1], "genes that overlap with QTLs"))
-    
+    m_gff_m <- bind_rows(m_gff_l) %>%
+      select(Chr, QTL.Start, QTL.End, What, Name, Location, Gen.Start, Gen.End)
     
     
-    # 3.2.2: Formatting dataframe ----------------------------------------------
     
-    message("Obtaining gene information...")
+    # 3.2.2 Continues filtering the annotation data ----------------------------
     
-    # Creates the objects to perform the loop
-    p <- 0
-    gffL <- list()
+    message("Obtaining gene annotation...")
     
-    # Loop
-    for (i in 1:nrow(annotLmm)){
+    # Creates an empty list object to save the data
+    m_annot_l <- list()
+    
+    # Filters and merges the annot data
+    for (i in 1:nrow(m_gff_m)){
       
-      # Iterator
-      p <- p + 1
-      
-      #
-      gffL[[i]] <- filter(annot,
-                          Locus == annotLmm$Name[p] |
-                            Trans == annotLmm$Name[p] |
-                            Peptide == annotLmm$Name[p]) %>%
-        mutate(Chr = annotLmm$Chr[p], 
-               Gen.Start = annotLmm$Gen.Start[p], Gen.End = annotLmm$Gen.End[p],
-               QTL.Start = annotLmm$QTL.Start[p], QTL.End = annotLmm$QTL.End[p], 
-               Location = annotLmm$Location[p])
+      # Filter the annotation data and creates new columns based on previous data
+      m_annot_l[[i]] <- filter(annot,
+                                Locus == m_gff_m$Name[i] |
+                                  Trans == m_gff_m$Name[i] |
+                                    Peptide == m_gff_m$Name[i]) %>%
+        mutate(Chr = m_gff_m$Chr[i], What = m_gff_m$What[i], Location = m_gff_m$Location[i],
+               Gen.Start = m_gff_m$Gen.Start[i], Gen.End = m_gff_m$Gen.End[i],
+               QTL.Start = m_gff_m$QTL.Start[i], QTL.End = m_gff_m$QTL.End[i])
       
       # Progress bar
-      cat('\r', i, ' rows processed |', rep('=', i / 5), ifelse(i == nrow(annotLm), '|\n', '>'), sep = '')
+      cat('\r', i, ' rows processed |', rep('=', i / 10), ifelse(i == nrow(m_annot_l), '|\n', '>'), sep = '')
       
     }
     
+    
+    
+    # 3.2.3 It ends by formatting the data frame -------------------------------
+    
     # Merge the data frames of the list in a single data frame and modify it
-    QTL_m_a <- bind_rows(gffL) %>% 
-      select(Chr, Locus, Gen.Start, Gen.End, GO, AT.name, AT.define, QTL.Start, QTL.End, Location)
+    m_QTL_annotation <- bind_rows(m_annot_l) %>% 
+      select(Chr, QTL.Start, QTL.End, What, ID, Locus, Trans, Peptide, Location, 
+             Gen.Start, Gen.End, GO, AT.name, AT.define)
     
     
     
-    # 4: Save the outputs --------------------------------------------------------
+    # 4: Save the outputs ------------------------------------------------------
     
     message("Saving output files as: 'QTL_annotation.csv' and 'QTL_merged_annotation.csv'")
     
-    write.csv(QTL_a, file = "QTL_merged_annotation.csv", quote = F, row.names = F)
-    write.csv(QTL_m_a, file = "QTL_merged_annotation.csv", quote = F, row.names = F)
+    write.csv(s_QTL_annotation, file = "single_QTL_annotation.csv", quote = F, row.names = F)
+    write.csv(m_QTL_annotation, file = "merged_QTL_annotation,csv", quote = F, row.names = F)
     
     message("Done!")
     
@@ -392,7 +384,7 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, GFF, version, recursiv
 # name <- "QTL_results_heritability.csv"
 # wdyw <- "gene"
 # annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
-# GFF <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
+# gff <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
 # version <- "6.1"
 # recursive <- "F"
 
