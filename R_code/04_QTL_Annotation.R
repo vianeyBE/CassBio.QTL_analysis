@@ -18,7 +18,7 @@
 
 
 ###### To do ######
-# 1: Include trait name to QTL annotation (QTL object)
+# 1: Add a new pathway for common regions
 
 
 
