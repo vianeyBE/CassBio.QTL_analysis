@@ -18,7 +18,7 @@
 
 
 ###### To do ######
-# 
+# 1: Save the results in an Excel workbook in which each sheet is a different chromosome
 
 
 
