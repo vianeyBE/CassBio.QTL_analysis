@@ -18,7 +18,8 @@
 
 
 ###### To do ######
-# 1: Save the results in an Excel workbook in which each sheet is a different chromosome
+# 1: Modify location text
+# 2: Add trait name in c_QTL
 
 
 
@@ -32,7 +33,10 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursiv
   
   # Load packages
   if (!require(tidyverse)) install.packages(tidyverse)
+  if (!require(openxlsx)) install.packages(openxlsx)
+  
   library(tidyverse)
+  library(openxlsx)
   
   # Load annotation data and re-organize it
   
@@ -543,12 +547,45 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursiv
     
     
     
-    # 4: Save the outputs ------------------------------------------------------
+    # 4: Saving the outputs ----------------------------------------------------
     
-    message("Saving output files as: 'QTL_annotation.csv' and 'QTL_merged_annotation.csv'")
+    # Create empty lists
+    s_QTL_annotation_l <- list()
+    c_QTL_annotation_l <- list()
     
-    write.csv(s_QTL_annotation, file = "single_QTL_annotation.csv", quote = F, row.names = F)
-    write.csv(c_QTL_annotation, file = "merged_QTL_annotation.csv", quote = F, row.names = F)
+    # Split the data in a list by saving each chromosome in a different data frame
+    for (p in sort(unique(s_QTL$Chr))){
+      
+      # Filter the QTL data per chromosome
+      s_QTL_annotation_l[[p]] <- dplyr::filter(s_QTL_annotation, Chr == p)
+      c_QTL_annotation_l[[p]] <- dplyr::filter(c_QTL_annotation, Chr == p)
+      
+    }
+    
+    # Create empty Excel workbooks
+    s_QTL_annotation_wb <- createWorkbook()
+    c_QTL_annotation_wb <- createWorkbook()
+    
+    # Add sheets to the workbook
+    for (p in sort(unique(s_QTL$Chr))){
+      
+      # Set sheet name
+      addWorksheet(s_QTL_annotation_wb, sheetName = paste0("Chr_0", p))
+      addWorksheet(c_QTL_annotation_wb, sheetName = paste0("Chr_0", p))
+      
+      # Obtain data
+      writeData(s_QTL_annotation_wb, sheet = paste0("Chr_0", p),
+                x = s_QTL_annotation_l[[p]], startCol = 1, startRow = 1)
+      writeData(c_QTL_annotation_wb, sheet = paste0("Chr_0", p),
+                x = c_QTL_annotation_l[[p]], startCol = 1, startRow = 1)
+      
+    }
+    
+    # Save the workbooks
+    message("Saving output files as: 'single_QTL_annotation.xlsx' and 'merged_QTL_annotation.xlsx'")
+    
+    saveWorkbook(s_QTL_annotation_wb, "single_QTL_annotation.xlsx", overwrite = T)
+    saveWorkbook(c_QTL_annotation_wb, "merged_QTL_annotation.xlsx", overwrite = T)
     
     message("Done!")
     
