@@ -117,12 +117,12 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursiv
     for (i in 1:length(names)){
       
       # Database handling 
-      csv_L[[i]] <- read.delim(paste0(Wdir, "/", names[i])) %>%
+      csv_L[[i]] <- read.delim(paste0(Wdir, names[i])) %>%
         select(phenotype, chr, lod, start.marker, end.marker) %>%
         mutate(start = start.marker) %>%
-        tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_")) %>%
+        tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_"), extra = "drop") %>%
         mutate(end = end.marker) %>%
-        tidyr::separate(col = end, into = c("na", "End"), sep = paste("_")) %>%
+        tidyr::separate(col = end, into = c("na", "End"), sep = paste("_"), extra = "drop") %>%
         select(phenotype, chr, lod, start.marker, end.marker, Start, End) %>%
         rename(Phenotype = phenotype, Chr = chr, LOD = lod,
                Start.Marker = start.marker, End.Marker = end.marker)
@@ -409,7 +409,7 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursiv
       )
       
       # Progress bar
-      cat('\r', i, ' files processed |', rep('=', i / 4), ifelse(i == nrow(s_QTL), '|\n', '>'), sep = '')
+      cat('\r', i, ' rows processed |', rep('=', i / 4), ifelse(i == nrow(s_QTL), '|\n', '>'), sep = '')
       
     }
     
@@ -601,16 +601,20 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursiv
 
 ###### Example(s) ######
 # Set arguments
-# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/All_metabolites/"
-# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Significant_ones/"
-# Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
+# Recursive
+# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Everything/"
 # name <- "LodIntervals"
+
+# Non-recursive
+# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Significant_ones/"
 # name <- "QTL_results_heritability.csv"
+
+# Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
 # wdyw <- "gene"
 # annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
 # gff <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
 # version <- "6.1"
-# recursive <- "F"
+# recursive <- "T"
 
 # Run function
 # QTL_Annotation(Wdir, Ddir, name, wdyw, annot, gff, version, recursive)
