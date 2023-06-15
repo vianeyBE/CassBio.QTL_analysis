@@ -133,6 +133,64 @@ A single CSV file containing relevant gene information plus QTLs' LOD, P-values,
 - `tidyverse`
 - `openxlsx`
 
+## 5. Boxplot of significant markers: genotypes vs. phenotype
+
+This R function generates a boxplot for a given SNP. The function takes as inputs a CSV file with the phenotype values and a list of SNPs. The function can also receive an optional CSV file to add extra information about the samples to the plot (categories, family, ect.) The output of the function is a PDF file with the plot.
+
+### Usage
+
+```R
+
+QTL_Boxplot(outputname, dir, phenofile, genofile, snp_list_file, labelfile = NULL)
+
+``` 
+
+### Arguments
+- `outputname`: (required) character string with the base name for the output file.
+- `dir`: (required) character string with the directory where the output file will be saved.
+- `phenofile`: (required) character string with the name of the phenotype file in tabular format. The first column should contain the sample names, and the rest of the columns should contain the phenotypes.
+- `genofile`: (required) character string with the name of the genotype file in hapmap format.
+- `snp_list_file`: (required) character string with the name of the CSV file with three columns:
+    - Column 01 - Name: SNPS. List of SNPS to plot. The name should be the same as in the `genofile` data.
+    - Column 02 - Name: trait. Name of the trait as in the `phenofile` data.
+    - Column 03 - Name: xlabel. Name of the trait to be included as a label.
+- `labelfile`: (optional) character string with the name of the CSV file with two columns:
+    - Column 01 - Name: Taxa. Sample names.
+    - Column 02 - Name: label. Label or category to add to the plot.
+
+### Details
+
+The function loads all the necessary packages and data files. It then checks for the presence of an optional file with sample labels and prepares the data for the boxplot. The function generates a boxplot for each SNP specified in the input CSV file. It uses `ggplot2` package to generate the plot, with the genotypes on the x-axis and the phenotype on the y-axis. The function adds a label to the x-axis to indicate the trait being plotted. If `labelfile` is provided, it adds extra information about the samples, coloring the data by the levels in the provided file.
+
+### Example
+
+```R
+
+# Generate boxplot without extra labels
+QTL_Boxplot("outputname", ".path/to/save/plots/", "phenotype.csv", "genotype.hmp", "snp_list.csv")
+
+# Generate boxplot with extra labels
+QTL_Boxplot("outputname", ".path/to/save/plots/", "phenotype.csv", "genotype.hmp", "snp_list.csv", "labelfile.csv")
+
+```
+
+### Output
+
+A single PDF file containing the boxplot of the SNPs.
+
+### Dependencies
+
+- `tidyverse`
+- `tibble`
+- `dplyr`
+- `janitor`
+- `ggplot2`
+- `Biostrings`
+- `hrbrthemes`
+- `forcats`
+- `ggsignif`
+- `RColorBrewer`
+
 ---
 
 ## Contact
