@@ -11,7 +11,7 @@
 # name: Enter the path or the name of file names to look for. For example: QTL_LOD_Intervals.
 # wdyw: Enter what are you looking for to annotate (Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR).
 # annot: Annotation details of the genes. txt file from the genome version used for alignment.
-# GFF: gff3 file from the genome version used for alignment.
+# gff: gff3 file from the genome version used for alignment.
 # version: You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1).
 # recursive: A Boolean string that determines if the function should perform a recursive search or not (Default = F).
 
@@ -25,7 +25,7 @@
 
 # 0: Function init -------------------------------------------------------------
 
-QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursive = F){
+QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursive){
   
   
   
@@ -601,20 +601,21 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursiv
 
 ###### Example(s) ######
 # Set arguments
-# Recursive
-# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Everything/"
-# name <- "LodIntervals"
-
-# Non-recursive
-# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Significant_ones/"
-# name <- "QTL_results_heritability.csv"
-
 # Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
 # wdyw <- "gene"
 # annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
 # gff <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
 # version <- "6.1"
+
+# If recursive
+# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Everything/"
+# name <- "LodIntervals"
 # recursive <- "T"
+
+# Non-recursive
+# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Significant_ones/"
+# name <- "QTL_results_heritability.csv"
+# recursive <- "F"
 
 # Run function
 # QTL_Annotation(Wdir, Ddir, name, wdyw, annot, gff, version, recursive)

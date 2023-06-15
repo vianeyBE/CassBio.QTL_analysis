@@ -77,7 +77,7 @@ This code annotates the gen that overlaps and/or contain the significant QTLs ob
 
 ```R
 
-QTL_Annotation(Wdir, Ddir, pat, wdyw)
+QTL_Annotation(Wdir, Ddir, name, wdyw, annot, gff, version, recursive)
 
 ```
 
@@ -85,11 +85,13 @@ QTL_Annotation(Wdir, Ddir, pat, wdyw)
 
 - `Wdir`: Name of the directory that contains the GAPIT results. For example: home/user/folder.
 - `Ddir`: Directory where is located the annotation files (annot, GFF files).
-- `pat`: Enter the path of file names to look for. For example: QTL_LOD_Intervals. The path must finish with a point (.).
-- `wdyw`: Enter what are you looking for to annotate. Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR.
+- `name`: Enter the path or the name of file names to look for. For example: QTL_LOD_Intervals.
+- `wdyw`: Enter what are you looking for to annotate (Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR).
 - `annot`: Annotation details of the genes. txt file from the genome version used for alignment.
-- `GFF`: gff3 file from the genome version used for alignment.
-- `version`: (Optional) You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1. Default = 6.1).
+- `gff`: gff3 file from the genome version used for alignment.
+- `version`: You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1).
+- `recursive`: A Boolean string that determines if the function should perform a recursive search or not (Default = F).
+
 
 ## Details
 
@@ -100,13 +102,25 @@ QTL_Annotation(Wdir, Ddir, pat, wdyw)
 ```R
 
 # Set arguments
-Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
 Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
-pat <- "QTL_LOD_Intervals."
 wdyw <- "gene"
+annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
+gff <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
+version <- "6.1"
+
+# If recursive
+Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Everything/"
+name <- "LodIntervals"
+recursive <- "T"
+
+# Non-recursive
+Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Significant_ones/"
+name <- "QTL_results_heritability.csv"
+recursive <- "F"
+
 
 # Run function
-QTL_Annotation(Wdir, Ddir, pat, wdyw)
+QTL_Annotation(Wdir, Ddir, name, wdyw, annot, gff, version, recursive)
 
 ```
 
@@ -117,6 +131,7 @@ A single CSV file containing relevant gene information plus QTLs' LOD, P-values,
 ### Dependencies
 
 - `tidyverse`
+- `openxlsx`
 
 ---
 
