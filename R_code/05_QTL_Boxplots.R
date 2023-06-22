@@ -9,13 +9,15 @@
 # dir: Directory where is located the data and where output will be save
 # phenofile: Phenotype data in csv format. Columns: samples, first one named as: Taxa'.
 # genofile: Genotype data in hapmap format
-# snps: CSV file with three columns:
+# snp_list: CSV file with three columns:
 #       01: SNPS. List of SNPS to plot, name should be the same as in the geno data
 #       02: trait. Name of the trait as in the pheno data
 #       03: xlabel. Name of the trait to be included as label
+# recursive: 
 # labelfile: CSV file with two columns (optional)
-#       01: taxa. Sample names
-#       02: label. Label or category to add at the plot
+#        01: taxa. Sample names
+#        02: label. Label or category to add at the plot
+# order: 
 
 
 
@@ -26,7 +28,7 @@
 
 # 0: Function init -------------------------------------------------------------
 
-QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recursive, labelfile){
+QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recursive, labelfile, order){
 
   
   
@@ -151,6 +153,8 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
     
     message("Labels were provided, they will be included in the boxplot")
     
+    
+    
     # 2.1.1: Prepare the data --------------------------------------------------
     # Load label file and modify it
     label <- read.csv(labelfile, header = T,
@@ -172,7 +176,7 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
     # Creates the boxplot for each trait
     for (i in 1:dim(snp_list)[1]){
       
-      # 
+      # Obtain each one of the snp, trait, and label
       snpname <- snp_list$SNPS[i]
       trait <- snp_list$trait[i]
       x_label <- snp_list$xlabel[i]
@@ -189,25 +193,38 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
       # Delete NAs
       data <- na.omit(data)
       
-      # List of comparisons
-      comp <- as.list(data.frame(matrix(combn(unique(data$snp), 2), ncol = 3)))
+      # Make a list of comparisons
+      if (length(unique(data$snp)) == 2){
+        
+        comp <- as.list(data.frame(matrix(combn(unique(data$snp), 2), ncol = 1)))
+        
+      } else{
+        
+        comp <- as.list(data.frame(matrix(combn(unique(data$snp), 2), ncol = 3)))
+        
+      }
       
-      comp1 <- list()
-      comp1[1] <- data.frame(matrix(unique(data$snp), ncol = 2))
+      # Re order the levels
+      if (!is.null(order)){
+        
+        data$Levels <- factor(data$Levels, levels = order)
+        
+      }
+      
+      
       
       # 2.1.2: Draws the boxplots ----------------------------------------------
       
       plot <- ggplot(data, aes(x = snp, y = get(paste0("X", trait)))) +
-        geom_violin(fill = "gray80", color = "gray80", width = 0.5, alpha = 0.5) +
-        geom_boxplot(fill = c("#1b9e77", "#d95f02", "#7570b3")[1:length(levels(data$snp))],
-                     alpha = 0.75, width = 0.2) +
-        geom_jitter(aes(color = Levels, shape = Levels), size = 2, height = 0, width = 0.2,
-                    alpha = 1) +
+        geom_violin(fill = "gray80", color = "white", width = 0.5, alpha = 0.5) +
+        geom_boxplot(fill = "gray80", alpha = 0.75, width = 0.1) +
+        geom_jitter(aes(color = Levels), size = 3, height = 0, width = 0.2, alpha = 1) +
+        scale_color_manual(values = c("#d7191c", "#fdae61", "#ffffbf", "#abdda4", "#2b83ba")) +
         geom_signif(comparisons = comp, map_signif_level = T) +
         labs(x = paste0("SNP: ", snpname), y = paste0("Trait: ", x_label)) +
-        scale_color_manual(values = palette) +
         theme_classic() +
-        theme(legend.position = "bottom", legend.title = element_blank(), 
+        theme(legend.position = "bottom", legend.title = element_blank(),
+              legend.text =  element_text(size = 12, color = "black"),
               axis.text = element_text(size = 12, color = "black"),
               axis.title = element_text(size = 12, color = "black"),
               axis.title.x = element_text(margin = margin(t = 10)),
@@ -234,7 +251,7 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
     # Creates the boxplot for each trait
     for (i in 1:dim(snps)[1]){
       
-      # 
+      # Obtain each one of the snp, trait, and label
       snpname <- snp_list$SNPS[i]
       trait <- snp_list$trait[i]
       x_label <- snp_list$xlabel[i]
@@ -249,9 +266,16 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
       # Delete the NAs
       data <- na.omit(data)
       
-      # List of comparisons
-      # comp = as.list(data.frame((combn(unique(data$snp),2))))
-      comp <- combn(unique(as.character(data$snp)), 2, simplify = F)
+      # Make a list of comparisons
+      if (length(unique(data$snp)) == 2){
+        
+        comp <- as.list(data.frame(matrix(combn(unique(data$snp), 2), ncol = 1)))
+        
+      } else{
+        
+        comp <- as.list(data.frame(matrix(combn(unique(data$snp), 2), ncol = 3)))
+        
+      }
       
       # Number of levels to plot
       n <- length(levels(data$snp))
@@ -285,6 +309,8 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
     
   }
   
+  
+  
   # 3: Function ends -----------------------------------------------------------
   message("Done!")
   
@@ -294,14 +320,15 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
 
 ###### Example(s) ######
 # Set arguments
- prefix <- "F1_CM8996"
- dir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
- phenofile <- "CM8996_metabolomic.csv"
- genofile <- "CM8996.final.hmp.txt"
- code <- "Chr"
- snp_list <- ".LodIntervals.txt"
- recursive <- T
- labelfile <- "CM8996_labels.csv"
+# prefix <- "F1_CM8996"
+# dir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+# phenofile <- "CM8996_metabolomic.csv"
+# genofile <- "CM8996.final.hmp.txt"
+# code <- "Chr"
+# snp_list <- ".LodIntervals.txt"
+# recursive <- T
+# labelfile <- "CM8996_labels.csv"
+# order <- c("S", "IS", "I", "IR", "R")
 
 # Run function
-# QTL_Boxplot(prefix, dir, phenofile, genofile, code, snp_list, recursive, labelfile)
+# QTL_Boxplot(prefix, dir, phenofile, genofile, code, snp_list, recursive, labelfile, order)
