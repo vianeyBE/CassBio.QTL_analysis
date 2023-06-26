@@ -117,12 +117,40 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
     # Merge the data frames of the list in a single data frame
     snp_list <- bind_rows(csv_L)
     
+    # Sort the SNPs alphabetically
+    snp_list$SNPS <- sort(snp_list$SNPS)
+    
     } else {
       
       if (recursive == F) {
       
+        snp_list <- "CM8996_metabolomic_results_plots.csv"
+        
       # Read the SNPs list from a csv file
-      snp_list <- read.csv(name, header = T)
+      snp_list <- read.csv(snp_list, header = T) %>%
+        select(start.marker, max.marker, end.marker, phenotype)
+      
+      # Creates three data frames based on start, max, and end marker
+      snp1 <- snp_list %>% select(start.marker, phenotype) %>% 
+        dplyr::rename(marker = start.marker)
+      snp2 <- snp_list %>% select(max.marker, phenotype) %>% 
+        dplyr::rename(marker = max.marker)
+      snp3 <- snp_list %>% select(end.marker, phenotype) %>% 
+        dplyr::rename(marker = end.marker)
+      
+      # Merge data bases
+      snp_list <- rbind(snp1, snp2, snp3)
+      
+      # Deletes the nucleotide info
+      snp_list <- snp_list %>% 
+        tidyr::separate(col = marker, into = c("chr", "pos", "nu"),sep = "_") %>%
+        unite(SNPS, chr, pos, sep = "_") %>%
+        mutate(xlabel = phenotype, trait = phenotype) %>%
+        select(SNPS, trait, xlabel) %>%
+        distinct(SNPS, .keep_all = T)
+      
+      # Sort the SNPs alphabetically
+      snp_list$SNPS <- sort(snp_list$SNPS)
       
     }
     
@@ -188,7 +216,7 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
       data <- merge(matrix_GT, pheno[,c("Taxa", paste0("X", trait))], by = 'Taxa')
       
       # Replace IUPAC to nucleotides
-      data$snp <-  as.factor(iupac[data[,snpname]])
+      data$snp <- as.factor(iupac[data[, snpname]])
       
       # Delete NAs
       data <- na.omit(data)
@@ -320,15 +348,23 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
 
 ###### Example(s) ######
 # Set arguments
-# prefix <- "F1_CM8996"
-# dir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
-# phenofile <- "CM8996_metabolomic.csv"
-# genofile <- "CM8996.final.hmp.txt"
-# code <- "Chr"
-# snp_list <- ".LodIntervals.txt"
-# recursive <- T
-# labelfile <- "CM8996_labels.csv"
-# order <- c("S", "IS", "I", "IR", "R")
+ prefix <- "F1_CM8996"
+ dir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+ phenofile <- "CM8996_metabolomic.csv"
+ genofile <- "CM8996.final.hmp.txt"
+ code <- "Chr"
+ labelfile <- "CM8996_labels.csv"
+ order <- c("S", "IS", "I", "IR", "R")
+ 
+ # If recursive == False
+ snp_list <- "CM8996_metabolomic_results_plots.csv"
+ recursive <- F
+ 
+ # # If recursive == True
+ snp_list <- ".LodIntervals"
+ recursive <- T
+
+
 
 # Run function
 # QTL_Boxplot(prefix, dir, phenofile, genofile, code, snp_list, recursive, labelfile, order)
