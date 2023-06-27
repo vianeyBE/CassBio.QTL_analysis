@@ -6,13 +6,13 @@
 # Authors: Camilo E. Sanchez (c.e.sanchez@cgiar.org) and Vianey Barrera-Enriquez (vpbarrera@gmail.com)
 #
 # Arguments:
-# Wdir: Name of the directory that contains the GAPIT results. For example: home/user/folder.
 # Ddir: Directory where is located the annotation files (annot, GFF files).
-# name: Enter the path or the name of file names to look for. For example: QTL_LOD_Intervals.
-# wdyw: Enter what are you looking for to annotate (Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR).
 # annot: Annotation details of the genes. txt file from the genome version used for alignment.
 # gff: gff3 file from the genome version used for alignment.
 # version: You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1).
+# Wdir: Name of the directory that contains the GAPIT results. For example: home/user/folder.
+# name: Enter the path or the name of file names to look for. For example: QTL_LOD_Intervals.
+# wdyw: Enter what are you looking for to annotate (Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR).
 # recursive: A Boolean string that determines if the function should perform a recursive search or not (Default = F).
 
 
@@ -20,12 +20,13 @@
 ###### To do ######
 # 1: Modify location text
 # 2: Add trait name in c_QTL
+# 3: Add prefix name
 
 
 
 # 0: Function init -------------------------------------------------------------
 
-QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursive){
+QTL_Annotation <- function(Ddir, annot, gff, version, Wdir, name, wdyw, recursive){
   
   
   
@@ -98,7 +99,7 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursiv
   
   if (recursive == T){
     
-    # Set working directoy
+    # Set working directory
     setwd(Wdir)
     
     # Get the names of the files
@@ -602,10 +603,10 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursiv
 ###### Example(s) ######
 # Set arguments
 # Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
-# wdyw <- "gene"
 # annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
 # gff <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
 # version <- "6.1"
+# wdyw <- "gene"
 
 # If recursive
 # Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Everything/"
@@ -613,9 +614,9 @@ QTL_Annotation <- function(Wdir, Ddir, name, wdyw, annot, gff, version, recursiv
 # recursive <- "T"
 
 # Non-recursive
-# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Significant_ones/"
-# name <- "QTL_results_heritability.csv"
+# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F2_Phenotype/03_QTL_Analysis/01_Adriana_version/"
+# name <- "AM1588.qtl.LodIntervals.csv"
 # recursive <- "F"
 
 # Run function
-# QTL_Annotation(Wdir, Ddir, name, wdyw, annot, gff, version, recursive)
+# QTL_Annotation(Ddir, annot, gff, version, Wdir, name, wdyw, recursive)
