@@ -41,6 +41,7 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
   if (!require(hrbrthemes)) install.packages(hrbrthemes)
   if (!require(ggsignif)) install.packages(ggsignif)
   if (!require(RColorBrewer)) install.packages(RColorBrewer)
+  if (!require(openxlsx)) install.packages(openxlsx)
   
   library(tidyverse)
   library(janitor)
@@ -48,6 +49,7 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
   library(hrbrthemes)
   library(ggsignif)
   library(RColorBrewer)
+  library(openxlsx)
   
   # Set working directory
   setwd(dir)
@@ -151,6 +153,7 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
       
       # Sort the SNPs alphabetically
       snp_list$SNPS <- sort(snp_list$SNPS)
+      rm(snp1, snp2, snp3)
       
     }
     
@@ -193,10 +196,13 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
     
     # Creates a color palette
     palette <- brewer.pal(n = length(levels(label$Levels)), name = "Dark2")
-    # palette <-  c('#219ebc', '#023047', '#fb8500')
     
     # Creates a copy of label file
     matrix_GT <- label
+    
+    # Create a new workbook
+    message("Creating workbook")
+    wb <- createWorkbook()
     
     # Creates the PDF file where boxplots will paste
     pdf(paste0(prefix, ".SNPs_boxplot.pdf", sep = ''), onefile = T)
@@ -239,7 +245,9 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
         
       }
       
-      
+      # Add the data to the workbook
+      addWorksheet(wb, sheetName = paste0(colnames(data)[3]))
+      writeData(wb, sheet = paste0(colnames(data)[3]), data, colNames = T)
       
       # 2.1.2: Draws the boxplots ----------------------------------------------
       
@@ -266,6 +274,17 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
     }
     
     dev.off()
+    
+    # Save outputs
+    saveWorkbook(wb, paste0(prefix, ".trait_x_snp.xlsx"), overwrite = T)
+    
+    dev.off()
+    
+    # Informative messages
+    message(paste0("Outputs:\n\n", 
+                   "1: ", prefix, ".trait_x_snp.xlsx\n",
+                   "2: ", prefix, ".SNPs_boxplot.pdf\n\n",
+                   "Were stored in: \n\n", dir))
     
   } else {
     
