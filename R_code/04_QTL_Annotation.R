@@ -10,9 +10,10 @@
 # annot: Annotation details of the genes. txt file from the genome version used for alignment.
 # gff: gff3 file from the genome version used for alignment.
 # version: You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1).
+# wdyw: Enter what are you looking for to annotate (Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR).
+# prefix: Prefix name that indicates how the outputs will be saved.
 # Wdir: Name of the directory that contains the GAPIT results. For example: home/user/folder.
 # name: Enter the path or the name of file names to look for. For example: QTL_LOD_Intervals.
-# wdyw: Enter what are you looking for to annotate (Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR).
 # recursive: A Boolean string that determines if the function should perform a recursive search or not (Default = F).
 
 
@@ -20,13 +21,12 @@
 ###### To do ######
 # 1: Modify location text
 # 2: Add trait name in c_QTL
-# 3: Add prefix name
 
 
 
 # 0: Function init -------------------------------------------------------------
 
-QTL_Annotation <- function(Ddir, annot, gff, version, Wdir, name, wdyw, recursive){
+QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, recursive){
   
   
   
@@ -435,7 +435,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, Wdir, name, wdyw, recursiv
                                 Locus == s_gff_m$Name[i] |
                                   Trans == s_gff_m$Name[i] |
                                     Peptide == s_gff_m$Name[i]) %>%
-        mutate(Trait =s_gff_m$Trait[i], Chr = s_gff_m$Chr[i], LOD = s_gff_m$LOD[i],
+        mutate(Trait = s_gff_m$Trait[i], Chr = s_gff_m$Chr[i], LOD = s_gff_m$LOD[i],
                QTL.Start = s_gff_m$QTL.Start[i], QTL.End = s_gff_m$QTL.End[i],
                What = s_gff_m$What[i], Location = s_gff_m$Location[i],
                Gen.Start = s_gff_m$Gen.Start[i], Gen.End = s_gff_m$Gen.End[i])
@@ -585,8 +585,8 @@ QTL_Annotation <- function(Ddir, annot, gff, version, Wdir, name, wdyw, recursiv
     # Save the workbooks
     message("Saving output files as: 'single_QTL_annotation.xlsx' and 'merged_QTL_annotation.xlsx'")
     
-    saveWorkbook(s_QTL_annotation_wb, "single_QTL_annotation.xlsx", overwrite = T)
-    saveWorkbook(c_QTL_annotation_wb, "merged_QTL_annotation.xlsx", overwrite = T)
+    saveWorkbook(s_QTL_annotation_wb, paste0(prefix, ".single_QTL_annotation.xlsx"), overwrite = T)
+    saveWorkbook(c_QTL_annotation_wb, paste0(prefix, ".merged_QTL_annotation.xlsx"), overwrite = T)
     
     message("Done!")
     
@@ -607,6 +607,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, Wdir, name, wdyw, recursiv
 # gff <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
 # version <- "6.1"
 # wdyw <- "gene"
+# prefix <- "F1_CM8996_Metabolomic"
 
 # If recursive
 # Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Everything/"
@@ -614,9 +615,9 @@ QTL_Annotation <- function(Ddir, annot, gff, version, Wdir, name, wdyw, recursiv
 # recursive <- "T"
 
 # Non-recursive
-# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F2_Phenotype/03_QTL_Analysis/01_Adriana_version/"
-# name <- "AM1588.qtl.LodIntervals.csv"
+# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+# name <- "CM8996_metabolomic_results_plots.csv"
 # recursive <- "F"
 
 # Run function
-# QTL_Annotation(Ddir, annot, gff, version, Wdir, name, wdyw, recursive)
+# QTL_Annotation(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, recursive)
