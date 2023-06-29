@@ -5,10 +5,11 @@
 # Authors: Camilo E. Sánchez-Sarria (c.e.sanchez@cgiar.org) and Vianey Barrera-Enriquez (vpbarrerae@gmail.com)
 #
 # Arguments:
-# prefix: Name that will have the output
-# dir: Directory where is located the data and where output will be save
-# phenofile: Phenotype data in csv format. Columns: samples, first one named as: Taxa'.
-# genofile: Genotype data in hapmap format
+# prefix: Name that will have the output.
+# dir: Directory where is located the data and where output will be save.
+# phenofile: Phenotype data in csv format. Columns: samples, first one named as: "Taxa".
+# genofile: Genotype data in hapmap format.
+# code: 
 # snp_list: CSV file with three columns:
 #       01: SNPS. List of SNPS to plot, name should be the same as in the geno data
 #       02: trait. Name of the trait as in the pheno data
@@ -22,7 +23,8 @@
 
 
 ##### To do #####
-# 1: 
+# 1: Finish arguments description
+# 2: Review the T of snp_list read part and the F of the plotting part
 
 
 
@@ -119,14 +121,12 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
     # Merge the data frames of the list in a single data frame
     snp_list <- bind_rows(csv_L)
     
-    # Sort the SNPs alphabetically
-    snp_list$SNPS <- sort(snp_list$SNPS)
+    # 
+    snp_list <- snp_list[order(snp_list$SNPS), ]
     
     } else {
       
-      if (recursive == F) {
-      
-        snp_list <- "CM8996_metabolomic_results_plots.csv"
+      if (recursive == F){
         
       # Read the SNPs list from a csv file
       snp_list <- read.csv(snp_list, header = T) %>%
@@ -148,12 +148,10 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
         tidyr::separate(col = marker, into = c("chr", "pos", "nu"),sep = "_") %>%
         unite(SNPS, chr, pos, sep = "_") %>%
         mutate(xlabel = phenotype, trait = phenotype) %>%
-        select(SNPS, trait, xlabel) %>%
-        distinct(SNPS, .keep_all = T)
+        select(SNPS, trait, xlabel)
       
-      # Sort the SNPs alphabetically
-      snp_list$SNPS <- sort(snp_list$SNPS)
-      rm(snp1, snp2, snp3)
+      #
+      snp_list <- snp_list[order(snp_list$SNPS), ]
       
     }
     
@@ -204,6 +202,9 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
     message("Creating workbook")
     wb <- createWorkbook()
     
+    # Creates an empty list to storage the data
+    data_snp <- list()
+    
     # Creates the PDF file where boxplots will paste
     pdf(paste0(prefix, ".SNPs_boxplot.pdf", sep = ''), onefile = T)
     
@@ -227,14 +228,26 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
       # Delete NAs
       data <- na.omit(data)
       
+      # Change column names
+      colnames(data)[3] <- "na"
+      colnames(data)[4] <- "Values"
+      colnames(data)[5] <- "SNP"
+      
+      # Database handling
+      data <- data %>% mutate(Trait = trait, Name = snpname) %>%
+        select(Taxa, Levels, Values, SNP, Trait, Name)
+      
+      # Save the data in the list
+      data_snp[[i]] <- data
+      
       # Make a list of comparisons
-      if (length(unique(data$snp)) == 2){
+      if (length(unique(data$SNP)) == 2){
         
-        comp <- as.list(data.frame(matrix(combn(unique(data$snp), 2), ncol = 1)))
+        comp <- as.list(data.frame(matrix(combn(unique(data$SNP), 2), ncol = 1)))
         
-      } else{
+      } else {
         
-        comp <- as.list(data.frame(matrix(combn(unique(data$snp), 2), ncol = 3)))
+        comp <- as.list(data.frame(matrix(combn(unique(data$SNP), 2), ncol = 3)))
         
       }
       
@@ -245,13 +258,11 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
         
       }
       
-      # Add the data to the workbook
-      addWorksheet(wb, sheetName = paste0(colnames(data)[3]))
-      writeData(wb, sheet = paste0(colnames(data)[3]), data, colNames = T)
+      
       
       # 2.1.2: Draws the boxplots ----------------------------------------------
       
-      plot <- ggplot(data, aes(x = snp, y = get(paste0("X", trait)))) +
+      plot <- ggplot(data, aes(SNP, Values)) +
         geom_violin(fill = "gray80", color = "white", width = 0.5, alpha = 0.5) +
         geom_boxplot(fill = "gray80", alpha = 0.75, width = 0.1) +
         geom_jitter(aes(color = Levels), size = 3, height = 0, width = 0.2, alpha = 1) +
@@ -275,10 +286,13 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
     
     dev.off()
     
-    # Save outputs
-    saveWorkbook(wb, paste0(prefix, ".trait_x_snp.xlsx"), overwrite = T)
+    # Merge the list in one dataframe
+    data_snp_M <- bind_rows(data_snp)
     
-    dev.off()
+    # Add the data to the workbook and save it
+    addWorksheet(wb, sheetName = paste0(prefix))
+    writeData(wb, sheet = paste0(prefix), data_snp_M, colNames = T)
+    saveWorkbook(wb, paste0(prefix, ".trait_x_snp.xlsx"), overwrite = T)
     
     # Informative messages
     message(paste0("Outputs:\n\n", 
@@ -359,6 +373,7 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
   
   
   # 3: Function ends -----------------------------------------------------------
+  
   message("Done!")
   
 }
@@ -380,8 +395,8 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recurs
  recursive <- F
  
  # # If recursive == True
- snp_list <- ".LodIntervals"
- recursive <- T
+# snp_list <- ".LodIntervals"
+# recursive <- T
 
 
 
