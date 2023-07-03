@@ -14,23 +14,22 @@
 #       01: SNPS. List of SNPS to plot, name should be the same as in the geno data
 #       02: trait. Name of the trait as in the pheno data
 #       03: xlabel. Name of the trait to be included as label
-# recursive: 
+# recursive: A Boolean string indicating if there is to perform a recursive search of files (Options: T or F).
 # labelfile: CSV file with two columns (optional)
 #        01: taxa. Sample names
 #        02: label. Label or category to add at the plot
-# order: 
+# order: A vector string indicating the order to plot given the labelfile (Optional).
 
 
 
 ##### To do #####
-# 1: Finish arguments description
-# 2: Review the T of snp_list read part and the F of the plotting part
+# 1: Review the T of snp_list read part and the F of the plotting part
 
 
 
 # 0: Function init -------------------------------------------------------------
 
-QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recursive, labelfile, order){
+QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snp_list, recursive, labelfile, order = NULL){
 
   
   
