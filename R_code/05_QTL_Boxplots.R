@@ -10,7 +10,6 @@
 # dir: Directory where is located the data and where output will be save.
 # phenofile: Phenotype data in csv format. Columns: samples. Rows: individuals.
 # genofile: Genotype data in hapmap format.
-# code: The way in which the chromosomes are coded in genofile (Options: 'S' or 'Chr').
 # snpList: CSV file with three columns:
 #      01: List of SNPS to plot, name should be the same as in the geno data.
 #      02: Name of the trait as in the pheno data.
@@ -29,7 +28,7 @@
 
 # 0: Function init -------------------------------------------------------------
 
-QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snpList, recursive, labelfile = NULL, 
+QTL_Boxplot <- function(prefix, dir, phenofile, genofile, snpList, recursive, labelfile = NULL, 
                         order = NULL){
   
   
@@ -67,8 +66,11 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snpList, recursi
   geno <- geno %>% janitor::row_to_names(1) %>%
     tidyr::separate(col = 1, into = c("chr", "posit"), sep = "_")
   
-  # Conditional for how is coded the SNPs in the hapmap
-  if (code == "S"){
+  # Re-code the SNPs in the hapmap to 'C'
+  if (grepl("S", geno[["chr"]])[1] == T){
+    
+    # Informative message
+    message("SNPs are coded as 'S'\n\n", "Recoding them to 'C'")
     
     # Data frame modification
     geno <- geno %>% mutate(chrs = str_replace(chr, "S", "C")) %>%
@@ -79,7 +81,10 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snpList, recursi
     
   } else {
     
-    if (code == "Chr"){
+    if (grepl("Chr", geno[["chr"]])[1] == T){
+      
+      # Informative message
+      message("SNPs are coded as 'Chr'\n\n", "Recoding them to 'C'")
       
       # Data frame modification
       geno <- geno  %>% mutate(chrs = str_replace(chr, "Chromosome", "C")) %>%
@@ -87,6 +92,10 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snpList, recursi
         select(-c(1)) %>%
         remove_rownames() %>%
         column_to_rownames(var = 'SNPS')
+      
+    } else {
+      
+      message("SNPs are coded correctly as 'C'")
       
     }
     
@@ -477,11 +486,10 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snpList, recursi
 
 # Example(s) -------------------------------------------------------------------
 # Set arguments
-# prefix <- "F1_CM8996"
-# dir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
-# phenofile <- "CM8996_metabolomic.csv"
-# genofile <- "CM8996.final.hmp.txt"
-# code <- "Chr"
+ prefix <- "F1_CM8996"
+ dir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+ phenofile <- "CM8996_metabolomic.csv"
+ genofile <- "CM8996.final.hmp.txt"
 # labelfile <- "CM8996_labels.csv"
 # order <- c("S", "IS", "I", "IR", "R")
  
@@ -496,4 +504,4 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, code, snpList, recursi
 
 
 # Run function -----------------------------------------------------------------
-# QTL_Boxplot(prefix, dir, phenofile, genofile, code, snpList, recursive, labelfile = NULL, order = NULL)
+# QTL_Boxplot(prefix, dir, phenofile, genofile, snpList, recursive, labelfile = NULL, order = NULL)
