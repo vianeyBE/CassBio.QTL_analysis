@@ -40,14 +40,15 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
   library(openxlsx)
   
   # Load annotation data and re-organize it
-  
   if (version == 6.1){
     
+    # Informative message
     message("Loading required files to do the annotation")
     
     # Set working directory where files are located
     setwd(Ddir)
     
+    # Read and modify the files
     annot <- read.delim(annot, header = F) %>%
       rename(ID = 1, Locus = 2, Trans = 3, Peptide = 4, GO = 10, AT.name = 12, AT.define = 13) %>%
       select(ID, Locus, Trans, Peptide, GO, AT.name, AT.define)
@@ -68,11 +69,13 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     
   } else {
     
+    # Informative message
     message("Loading required files to do the annotation")
     
     # Set working directory where files are located
     setwd(Ddir)
     
+    # Read and modify the files
     annot <- read.delim(annot, header = T) %>%
       rename(ID = 1, Locus = 2, Trans = 3, Peptide = 4, GO = 10, AT.name = 11, AT.define = 12) %>%
       select(ID, Locus, Trans, Peptide, GO, AT.name, AT.define)
@@ -110,11 +113,10 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     message(paste("QTL mapping files found:", length(names)))
     message("Reading QTL mapping files...")
     
-    # Create an empty list and the variable to iterate
-    # Read, rename, modify and save all the csv files in the list
+    # Create an empty list to store data
     csv_L <- list()
     
-    # Loop to find QTL files
+    # Loop to find, read, rename, modify and save all QTL files
     for (i in 1:length(names)){
       
       # Database handling 
@@ -359,6 +361,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
   # Conditional: If there is at least one QTL to annotate, the function continues
   if (dim(s_QTL)[1] > 0){
     
+    # Informative message
     message(paste("There are", dim(s_QTL)[1], "QTLs to annotate"))
     
     
@@ -366,7 +369,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     # 3.1 Function pathway for single QTLs (s_QTL) -----------------------------
     
     # 3.1.1 Starts filtering the gff3 data -------------------------------------
-    
+    # Informative message
     message("Obtaining gene information...")
     
     # Creates an empty list object to save the data
@@ -421,7 +424,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     
     
     # 3.2.2 Continues filtering the annotation data ----------------------------
-    
+    # Informative message
     message("Obtaining gene annotation...")
     
     # Creates an empty list object to save the data
@@ -459,7 +462,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     # 3.2 Function pathway for merged QTLs (c_QTL) -----------------------------
     
     # 3.2.1 Starts filtering the gff3 data -------------------------------------
-    
+    # Informative messages
     message("Obtaining gene information...")
     
     # Creates an empty list object to save the data
@@ -514,7 +517,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     
     
     # 3.2.2 Continues filtering the annotation data ----------------------------
-    
+    # Informative message
     message("Obtaining gene annotation...")
     
     # Creates an empty list object to save the data
@@ -583,6 +586,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     }
     
     # Save the workbooks
+    # Informative messages
     message("Saving output files as: 'single_QTL_annotation.xlsx' and 'merged_QTL_annotation.xlsx'")
     
     saveWorkbook(s_QTL_annotation_wb, paste0(prefix, ".single_QTL_annotation.xlsx"), overwrite = T)
@@ -592,6 +596,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     
   } else {
     
+    # Informative message
     message("No QTLs to annotate")
     
   }
@@ -600,7 +605,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
 
 
 
-###### Example(s) ######
+# Example(s) -------------------------------------------------------------------
 # Set arguments
 # Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
 # annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
@@ -619,5 +624,7 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
 # name <- "CM8996_metabolomic_results_plots.csv"
 # recursive <- "F"
 
-# Run function
+
+
+# Run function -----------------------------------------------------------------
 # QTL_Annotation(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, recursive)

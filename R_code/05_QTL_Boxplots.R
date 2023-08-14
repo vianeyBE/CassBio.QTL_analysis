@@ -486,10 +486,10 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, snpList, recursive, la
 
 # Example(s) -------------------------------------------------------------------
 # Set arguments
- prefix <- "F1_CM8996"
- dir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
- phenofile <- "CM8996_metabolomic.csv"
- genofile <- "CM8996.final.hmp.txt"
+# prefix <- "F1_CM8996"
+# dir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+# phenofile <- "CM8996_metabolomic.csv"
+# genofile <- "CM8996.final.hmp.txt"
 # labelfile <- "CM8996_labels.csv"
 # order <- c("S", "IS", "I", "IR", "R")
  
