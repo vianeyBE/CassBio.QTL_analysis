@@ -67,6 +67,9 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
                           Chromosome17 = 17, Chromosome18 = 18)) %>%
       dplyr::filter(What %in% wdyw)
     
+    # Informative message
+    message("Annotation files loaded succesfully")
+    
   } else {
     
     # Informative message
@@ -93,6 +96,9 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
                           Chromosome13 = 13, Chromosome14 = 14, Chromosome15 = 15, Chromosome16 = 16, 
                           Chromosome17 = 17, Chromosome18 = 18)) %>%
       dplyr::filter(What %in% wdyw)
+    
+    # Informative message
+    message("Annotation files loaded succesfully")
     
   }
   
@@ -235,6 +241,9 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
       rename(QTL.Start = Start, QTL.End = End, QTL.Convergence = Convergence) %>%
       select(Chr, QTL.Start, QTL.End, QTL.Convergence, QTL_count, QTl.Wide)
     
+    # Informative message
+    message("QTL files loaded succesfully")
+    
     } else {
     
     # Set working directory
@@ -351,6 +360,9 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     c_QTL <- c_QTL %>% mutate(QTl.Wide = End - Start) %>%
       rename(QTL.Start = Start, QTL.End = End, QTL.Convergence = Convergence) %>%
       select(Chr, QTL.Start, QTL.End, QTL.Convergence, QTL_count, QTl.Wide)
+    
+    # Informative message
+    message("QTL files loaded succesfully")
     
     }
   
@@ -607,12 +619,12 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
 
 # Example(s) -------------------------------------------------------------------
 # Set arguments
-# Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
-# annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
-# gff <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
-# version <- "6.1"
-# wdyw <- "gene"
-# prefix <- "F1_CM8996_Metabolomic"
+ Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
+ annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
+ gff <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
+ version <- "6.1"
+ wdyw <- "gene"
+ prefix <- "F1_CM8996_Metabolomic"
 
 # If recursive
 # Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Everything/"
@@ -620,9 +632,9 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
 # recursive <- "T"
 
 # Non-recursive
-# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
-# name <- "CM8996_metabolomic_results_plots.csv"
-# recursive <- "F"
+ Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
+ name <- "CM8996_metabolomic_results_plots.csv"
+ recursive <- "F"
 
 
 
