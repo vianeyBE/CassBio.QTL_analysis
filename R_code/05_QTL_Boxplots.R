@@ -128,7 +128,8 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, snpList, recursive, la
         select(SNPS, trait)
       
       # Progress bar
-      cat('\r', i, ' files processed |', rep('=', i / 2), ifelse(i == length(names), '|\n', '>'), sep = '')
+      cat('\r', i, ' files processed |', rep('=', i / 2), 
+          ifelse(i == length(names), '|\n', '>'), sep = '')
       
     }
     
@@ -319,7 +320,8 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, snpList, recursive, la
       print(plot)
       
       # Progress bar
-      cat('\r', i, ' SNPs processed |', rep('=', i/2), ifelse(i == dim(snpList)[1], '|\n',  '>'), sep = '')
+      cat('\r', i, ' SNPs processed |', rep('=', i/2), 
+          ifelse(i == dim(snpList)[1], '|\n',  '>'), sep = '')
       
     }
     
@@ -450,7 +452,8 @@ QTL_Boxplot <- function(prefix, dir, phenofile, genofile, snpList, recursive, la
       print(plot)
       
       # Progress bar
-      cat('\r', i, ' SNPs processed |', rep('=', i/2), ifelse(i == dim(snpList)[1], '|\n',  '>'), sep = '')
+      cat('\r', i, ' SNPs processed |', rep('=', i/2), 
+          ifelse(i == dim(snpList)[1], '|\n',  '>'), sep = '')
       
     }
     

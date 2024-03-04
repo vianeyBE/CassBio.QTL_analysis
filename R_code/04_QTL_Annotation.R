@@ -21,6 +21,7 @@
 ###### To do ######
 # 1: Modify location text
 # 2: Add trait name in c_QTL
+# 3: Modify version selection
 
 
 
@@ -45,15 +46,12 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     # Informative message
     message("Loading required files to do the annotation")
     
-    # Set working directory where files are located
-    setwd(Ddir)
-    
     # Read and modify the files
-    annot <- read.delim(annot, header = F) %>%
+    annot <- read.delim(paste0(Ddir, annot), header = F) %>%
       rename(ID = 1, Locus = 2, Trans = 3, Peptide = 4, GO = 10, AT.name = 12, AT.define = 13) %>%
       select(ID, Locus, Trans, Peptide, GO, AT.name, AT.define)
     
-    gff <- read.delim(gff, header = F, comment.char = "#") %>%
+    gff <- read.delim(paste0(Ddir, gff), header = F, comment.char = "#") %>%
       rename(Chr = V1, What = V3, Start = V4, End = V5) %>%
       tidyr::separate(col = V9, into = c("ID", "na"), sep = ";", extra = "drop") %>%
       tidyr::separate(col = ID, into = c("na2", "na3"), sep = "=", extra = "drop") %>%
@@ -74,16 +72,13 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     
     # Informative message
     message("Loading required files to do the annotation")
-    
-    # Set working directory where files are located
-    setwd(Ddir)
-    
+
     # Read and modify the files
-    annot <- read.delim(annot, header = T) %>%
+    annot <- read.delim(paste0(Ddir, annot), header = T) %>%
       rename(ID = 1, Locus = 2, Trans = 3, Peptide = 4, GO = 10, AT.name = 11, AT.define = 12) %>%
       select(ID, Locus, Trans, Peptide, GO, AT.name, AT.define)
     
-    gff <- read.delim(gff, header = F, comment.char = "#") %>%
+    gff <- read.delim(paste0(Ddir, gff), header = F, comment.char = "#") %>%
       rename(Chr = V1, What = V3, Start = V4, End = V5) %>%
       tidyr::separate(col = V9, into = c("ID", "na"), sep = ";", extra = "drop") %>%
       tidyr::separate(col = ID, into = c("na2", "na3"), sep = "=", extra = "drop") %>%
@@ -105,7 +100,6 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
   
   
   # 2: Find the CSV(s) with the results and creates the data frames ------------
-  
   if (recursive == T){
     
     # Set working directory
@@ -619,12 +613,12 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
 
 # Example(s) -------------------------------------------------------------------
 # Set arguments
- Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
- annot <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.annotation_info.txt"
- gff <- "Mesculenta_305_v6.1/Mesculenta_305_v6.1.gene.gff3"
- version <- "6.1"
- wdyw <- "gene"
- prefix <- "F1_CM8996_Metabolomic"
+# Ddir <- "D:/OneDrive - CGIAR/00_CassavaBioinformaticsPlatform/00_Basics/00_Data/Mesculenta_305_v6.1/"
+# annot <- "Mesculenta_305_v6.1.annotation_info.txt"
+# gff <- "Mesculenta_305_v6.1.gene.gff3"
+# version <- "6.1"
+# wdyw <- "gene"
+# prefix <- "Candiate_genes_WFR"
 
 # If recursive
 # Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Everything/"
@@ -632,9 +626,9 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
 # recursive <- "T"
 
 # Non-recursive
- Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/"
- name <- "CM8996_metabolomic_results_plots.csv"
- recursive <- "F"
+# Wdir <- "D:/OneDrive - CGIAR/00_CassavaBioinformaticsPlatform/01_ACWP/08_CandidateGenes/"
+# name <- "RegionQTL.csv"
+# recursive <- "F"
 
 
 
