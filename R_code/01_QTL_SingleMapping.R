@@ -279,7 +279,7 @@ single_qtl <- function(dir, dircross, dirfun, locfile, mapfile, phenofile, prefi
   plotPhenotypes.pdf(data.pheno)
   plotLOD.pdf(out)
   
-  source(paste0(dirfun, "02_QTL_MapPlot.R"))
+  source(paste0(dirfun, "03_QTL_MapPlot.R"))
   plot.single.QTL(lodint, "Lod")
   plot.single.QTL(bayesint, "Bayes")
   

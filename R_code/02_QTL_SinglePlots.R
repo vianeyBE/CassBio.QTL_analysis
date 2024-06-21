@@ -234,7 +234,7 @@ plotPhenotypes <- function(data.pheno){
 
 # 4: LOD score profile ---------------------------------------------------------
 
-plotLODCore <- function(data.lod.temp){
+plotLODCore <- function(data.lod.temp) {
   
   # out$chr = factor(out$chr, levels = c("LG1", "LG2", "LG3", "LG4", "LG5", "LG6", "LG7", "LG8", "LG9",
   #                                      "LG10", "LG11", "LG12",  "LG13",  "LG14",  "LG15", "LG16",
@@ -256,9 +256,9 @@ plotLODCore <- function(data.lod.temp){
              position = "jitter", alpha = 0.5, size = 0.25) + 
     scale_x_continuous(expand = expansion(mult = c(0.1, 0.1))) +
     scale_y_continuous(expand = expansion(mult = c(0.03, 0)), breaks = my_breaks,
-                       lab = my_labs, sec.axis = dup_axis(breaks = my_breaks)) +
-    scale_color_manual(values =  divergingx_hcl(n = npheno - 1, palette = "Roma", alpha = 1)) +
-    guides(col = guide_legend(ncol = 3, byrow = T))
+                       labels = my_labs, sec.axis = dup_axis(breaks = my_breaks)) +
+    scale_color_manual(values = divergingx_hcl(n = npheno - 1, palette = "Roma", alpha = 1)) +
+    guides(col = guide_legend(ncol = 3, byrow = TRUE)) +
     coord_capped_cart(bottom = 'both') +
     geom_hline(yintercept = maxlod * 1.05, size = 1, color = "black") +
     geom_hline(yintercept = 0, size = 1) +
@@ -284,7 +284,6 @@ plotLODCore <- function(data.lod.temp){
       legend.box = "vertical", legend.margin = margin())
   
   return(plot.lod)
-  
 }
 
 
