@@ -107,7 +107,8 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     
     # Get the names of the files
     message("Getting list of CSV files...")
-    names <- list.files(path = Wdir, pattern = paste0(name, "."), all.files = F, full.names = F, recursive = T)
+    names <- list.files(path = Wdir, pattern = paste0(name, "."), all.files = F, 
+                        full.names = F, recursive = T)
     
     # Informative messages
     message(paste("QTL mapping files found:", length(names)))
@@ -123,15 +124,18 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
       csv_L[[i]] <- read.delim(paste0(Wdir, names[i])) %>%
         select(phenotype, chr, lod, start.marker, end.marker) %>%
         mutate(start = start.marker) %>%
-        tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_"), extra = "drop") %>%
+        tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_"), 
+                        extra = "drop") %>%
         mutate(end = end.marker) %>%
-        tidyr::separate(col = end, into = c("na", "End"), sep = paste("_"), extra = "drop") %>%
+        tidyr::separate(col = end, into = c("na", "End"), sep = paste("_"), 
+                        extra = "drop") %>%
         select(phenotype, chr, lod, start.marker, end.marker, Start, End) %>%
         rename(Phenotype = phenotype, Chr = chr, LOD = lod,
                Start.Marker = start.marker, End.Marker = end.marker)
       
       # Progress bar
-      cat('\r', i, ' files processed |', rep('=', i / 4), ifelse(i == length(names), '|\n', '>'), sep = '')
+      cat('\r', i, ' files processed |', rep('=', i / 4), 
+          ifelse(i == length(names), '|\n', '>'), sep = '')
       
     }
     
@@ -219,7 +223,8 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
       }
       
       # Print the region with the highest convergence
-      best[[p]] <- data.frame(Chr = p, Start = best_start, End = best_end, Convergence = max_convergence)
+      best[[p]] <- data.frame(Chr = p, Start = best_start, End = best_end, 
+                              Convergence = max_convergence)
       
     }
     
@@ -248,9 +253,11 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     s_QTL <- read.csv(paste0(name)) %>%
       select(phenotype, chr, lod, start.marker, end.marker) %>%
       mutate(start = start.marker) %>%
-      tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_"), extra = "drop") %>%
+      tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_"), 
+                      extra = "drop") %>%
       mutate(end = end.marker) %>%
-      tidyr::separate(col = end, into = c("na", "End"), sep = paste("_"), extra = "drop") %>%
+      tidyr::separate(col = end, into = c("na", "End"), sep = paste("_"), 
+                      extra = "drop") %>%
       select(phenotype, chr, lod, start.marker, end.marker, Start, End) %>%
       rename(Phenotype = phenotype, Chr = chr, LOD = lod,
              Start.Marker = start.marker, End.Marker = end.marker)
@@ -339,7 +346,8 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
       }
       
       # Print the region with the highest convergence
-      best[[p]] <- data.frame(Chr = p, Start = best_start, End = best_end, Convergence = max_convergence)
+      best[[p]] <- data.frame(Chr = p, Start = best_start, End = best_end, 
+                              Convergence = max_convergence)
       
     }
     
@@ -363,7 +371,6 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
   
   
   # 3: Match the QTL results with the gene annotation databases ----------------
-  
   # Conditional: If there is at least one QTL to annotate, the function continues
   if (dim(s_QTL)[1] > 0){
     
@@ -460,8 +467,8 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     
     # Merge the data frames of the list in a single data frame and modify it
     s_QTL_annotation <- bind_rows(s_annot_l) %>%
-      select(Trait, Chr, LOD, QTL.Start, QTL.End, What, ID, Locus, Trans, Peptide, Location, 
-             Gen.Start, Gen.End, GO, AT.name, AT.define)
+      select(Trait, Chr, LOD, QTL.Start, QTL.End, What, ID, Locus, Trans, Peptide, 
+             Location, Gen.Start, Gen.End, GO, AT.name, AT.define)
     
     
     
@@ -593,10 +600,13 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
     
     # Save the workbooks
     # Informative messages
-    message("Saving output files as: 'single_QTL_annotation.xlsx' and 'merged_QTL_annotation.xlsx'")
+    message("\nSaving output files as:")
+    message("'single_QTL_annotation.xlsx' and 'merged_QTL_annotation.xlsx'")
     
-    saveWorkbook(s_QTL_annotation_wb, paste0(prefix, ".single_QTL_annotation.xlsx"), overwrite = T)
-    saveWorkbook(c_QTL_annotation_wb, paste0(prefix, ".merged_QTL_annotation.xlsx"), overwrite = T)
+    saveWorkbook(s_QTL_annotation_wb, paste0(prefix, ".single_QTL_annotation.xlsx"), 
+                 overwrite = T)
+    saveWorkbook(c_QTL_annotation_wb, paste0(prefix, ".merged_QTL_annotation.xlsx"), 
+                 overwrite = T)
     
     message("Done!")
     
@@ -613,12 +623,12 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
 
 # Example(s) -------------------------------------------------------------------
 # Set arguments
-# Ddir <- "D:/OneDrive - CGIAR/00_CassavaBioinformaticsPlatform/00_Basics/00_Data/Mesculenta_305_v6.1/"
-# annot <- "Mesculenta_305_v6.1.annotation_info.txt"
-# gff <- "Mesculenta_305_v6.1.gene.gff3"
-# version <- "6.1"
-# wdyw <- "gene"
-# prefix <- "Candiate_genes_WFR"
+Ddir <- "D:/OneDrive - CGIAR/00_CassavaBioinformaticsPlatform/00_Basics/03_Server_Bioinfo-CO/00_ReferenceGenome/Mesculenta_305_v6.1/"
+annot <- "Mesculenta_305_v6.1.annotation_info.txt"
+gff <- "Mesculenta_305_v6.1.gene.gff3"
+version <- "6.1"
+wdyw <- "gene"
+prefix <- "F2"
 
 # If recursive
 # Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Everything/"
@@ -626,9 +636,9 @@ QTL_Annotation <- function(Ddir, annot, gff, version, wdyw, prefix, Wdir, name, 
 # recursive <- "T"
 
 # Non-recursive
-# Wdir <- "D:/OneDrive - CGIAR/00_CassavaBioinformaticsPlatform/01_ACWP/08_CandidateGenes/"
-# name <- "RegionQTL.csv"
-# recursive <- "F"
+Wdir <- "D:/OneDrive - CGIAR/00_CassavaBioinformaticsPlatform/01_ACWP/03_Phenotypic/03_F2/11_Annotation/"
+name <- "Regions_QTLs.csv"
+recursive <- "F"
 
 
 
