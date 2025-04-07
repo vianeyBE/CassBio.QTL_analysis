@@ -16,6 +16,7 @@
 
 ###### To do ######
 # 1: Add trait name in c_QTL
+# 2: Add deleting gene duplicates  
 
 
 
@@ -630,16 +631,16 @@ QTL_Annotation <- function(version, wdyw, prefix, Wdir, name, recursive){
 # Set arguments
 # version <- "6.1"
 # wdyw <- "gene"
-# prefix <- "Supplementary"
+# prefix <- "male_stelirity"
 
 # If recursive
-# Wdir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/01_ACWP_F1_Metabolomics/02_QTL_Analysis/CM8996/Everything/"
+# Wdir <- "D:/OneDrive - CGIAR/00_BioInf_Platform/01_ACWP/02_F1/03_F1_Metabol/01_QTLs_CM8996/01_Everything/"
 # name <- "LodIntervals"
 # recursive <- "T"
 
 # Non-recursive
-# Wdir <- "D:/OneDrive - CGIAR/00_BioInf_Platform/01_ACWP/03_F2/02_F2_PhenoDataAnalysis/11_Annotation/"
-# name <- "Regions_QTLs.csv"
+# Wdir <- "D:/OneDrive - CGIAR/00_BioInf_Platform/01_ACWP/03_F2/02_F2_Pheno/14_MaleSterility/"
+# name <- "Chr_13.csv"
 # recursive <- "F"
 
 
