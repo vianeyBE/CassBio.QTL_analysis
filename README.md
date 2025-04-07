@@ -1,15 +1,159 @@
-# Cassava Bioinformatics Platform: QTL analysis Pipeline
+# Cassava Bioinformatics Platform: QTL analysis pipeline 🧬
 
-Pipeline for QTL analysis on bi-parental families in Cassava
+A modular, end-to-end pipeline to conduct **QTL (Quantitative Trait Loci)** mapping for cassava bi-parental populations. It performs SNP filtering, encoding, QTL single-marker analysis, high-resolution plotting, functional annotation, and validation through SNP-to-trait boxplots.
 
-**Authors**: Vianey Barrera-Enriquez and Camilo E. Sanchez-Sarria
+Designed with reproducibility and modularity in mind, this pipeline is implemented in `Python` and `R`, making it adaptable to different breeding projects.
 
-The pipeline has four main steps:
 
-1. Single QTL mapping
-2. Multiple QTL mapping (MQM) (*in progress*)
-3. Customized plots (LOD profiles, Missing genotypes, etc)
-4. Annotation of results
+
+
+
+## Authors 🙋
+
+For questions or feedback about this pipeline, please contact:
+
+- **Camilo E. Sánchez-Sarria** - [CGIAR]: c.e.sanchez@cgiar.org
+- **Vianey Barrera-Enriquez** - [CGIAR]: v.barrera@cgiar.org
+
+
+
+
+
+## Workflow overview 🚀
+
+**| 1 | Quality control** 🧹 Filters the raw VCF file and converts it into a mapping-ready format
+
+**| 2 | Encoding SNPs** 📉 Encodes bi-allelic genotypes for F1 QTL mapping
+
+**| 3 | QTL analysis** ✂️ Performs single QTL scan using R/qtl
+
+**| 4 | LOD profiles** 🧭 Plots LOD profiles from QTL scans
+
+**| 5 | QTL regions** 📊 Visualizes converged QTL regions in the genome
+
+**| 6 | QTL density** 🧮 Visualizes QTL density across chromosomes
+
+**| 7 | Functional annotation** 🧾 Annotates QTL regions using upstream/downstream gene proximity
+
+**| 8 | Marker validation boxplots** 📈 Validates candidate QTLs by SNP-to-trait boxplots
+
+
+
+
+
+## Module descriptions 🧩
+
+Each module contains a README.md describing:
+
+- **Description**: A brief explanation of what the module does
+- **Input arguments**: Parameters or flags used when running the module
+- **Example usage**: Command-line or script usage example
+- **Example output structure**: Example of the outputs produced by the module
+- **Dependencies**: Required packages, tools, or environments
+
+
+
+
+
+## Installation and dependencies 🛠️
+
+To clone the repository and ensure reproducibility:
+
+```bash
+
+git clone https://github.com/vianeyBE/CassBio.QTL_analysis.git
+cd CassBio.QTL_analysis
+
+# OPTIONAL: Set up a conda environment
+conda env create -f environment.yaml
+conda activate cassbio-qtl
+
+```
+
+This pipeline relies on the following tools and packages. Make sure they are installed and accessible in your environment (or use the `environment.yaml` file to create a reproducible setup)
+
+**Core tools**
+- `R ≥ 4.0`: Required for QTL mapping, plotting, and annotation
+- `Python ≥ 3.7`: Required for preprocessing and encoding
+
+**R packages**
+- `qtl`
+- `tidyverse`
+- `ggplot2`
+- `ggsignif`
+- `openxlsx`
+- `gridExtra`
+- `scales`
+
+Install manually with
+
+``` R
+
+install.packages(c("tidyverse", "ggplot2", "ggsignif", "openxlsx", "gridExtra", "scales"))
+if (!require("qtl")) install.packages("qtl")
+
+```
+
+**Python packages**
+- `pandas`
+- `numpy`
+- `argparse`
+
+Install via pip or Conda
+
+``` bash
+
+pip install pandas numpy argparse
+
+```
+
+**Optional tools**
+- `PLINK`: VCF filtering or format conversion (optional)
+- `TASSEL`: VCF to HapMap conversion (optional for downstream compatibility)
+
+
+
+
+
+## Usage ▶️
+
+Each script is designed to be run independently, allowing flexibility to modify or skip modules based on available data.
+
+**Example workflow:**
+
+``` bash
+
+# Step 1: VCF filtering
+python 01_FilterVCF_for_Map.py --input raw_data.vcf --output filtered.vcf
+
+# Step 2: Encode markers for mapping
+python 02_Encoding_SNP-F1-population.py --vcf filtered.vcf --labels sample_labels.csv --output encoded.csv
+
+# Step 3: QTL single scan
+Rscript 03_QTL_SingleMapping.R
+
+# Step 4: Plot QTL scans
+Rscript 04_QTL_SinglePlots.R
+
+# Step 5: Create QTL convergence map
+Rscript 05_QTL_MapPlot.R
+
+# Step 6: Plot QTL density
+Rscript 06_DensityMapPlot.R
+
+# Step 7: Annotate genes near QTL
+Rscript 07_QTL_Annotation.R
+
+# Step 8: Validate QTLs with SNP x Trait boxplots
+Rscript 08_QTL_Boxplots.R
+
+```
+
+See the header of each script for required arguments and usage examples.
+
+
+
+
 
 ## 1. Single QTL Mapping
 
@@ -17,8 +161,10 @@ This code performs QTL (Quantitative Trait Locus) analysis using `Rqtl` package.
 
 ### Usage
 
-```R
+``` R
+
 single_qtl(dir, dircross, dirfun, locfile, mapfile, phenofile, prefixResults, ncores, step = 0.5, off.end = 0, error.prob = 0.001, alpha = 0.1, n.perm = 1000, map.function = "kosambi", stepwidth = "fixed", model_scanone = "normal")
+
 ```
 
 ### Arguments
@@ -99,7 +245,7 @@ QTL_Annotation(Wdir, Ddir, name, wdyw, annot, gff, version, recursive)
 
 ### Examples
 
-```R
+``` R
 
 # Set arguments
 Ddir <- "D:/OneDrive - CGIAR/Cassava_Bioinformatics_Team/00_Data/"
@@ -164,7 +310,7 @@ The function loads all the necessary packages and data files. It then checks for
 
 ### Example
 
-```R
+``` R
 
 # Generate boxplot without extra labels
 QTL_Boxplot("outputname", ".path/to/save/plots/", "phenotype.csv", "genotype.hmp", "snp_list.csv")
@@ -191,8 +337,39 @@ A single PDF file containing the boxplot of the SNPs.
 - `ggsignif`
 - `RColorBrewer`
 
----
 
-## Contact
 
-For questions or feedback about this pipeline, please contact Vianey Barrera-Enriquez at v.barrera@cgiar.org.
+
+
+## Citing this pipeline 📌
+
+If you use this pipeline in your research or publication, please cite it as:
+
+> Authors: Sánchez-Sarria, C. E., and Barrera-Enríquez, V  
+> Title: *QTL analysis modular pipeline for Cassava: A reproducible and scalable workflow for pre-processing steps, QTL analysis and annotation in Cassava (Manihot esculenta)*
+> GitHub repository: https://github.com/vianeyBE/CassBio.QTL_analysis
+> Version: v1.0  
+> Year: 2025
+
+Alternatively, cite this repository using the following BibTeX entry:
+
+``` bibtex
+
+@misc{cassava_gwas_pipeline,
+  author       = {Sánchez-Sarria, C. E., and Barrera-Enríquez, V},
+  title        = {QTL analysis modular pipeline for Cassava},
+  year         = 2025,
+  version      = {v1.0},
+  url          = {ttps://github.com/vianeyBE/CassBio.QTL_analysis},
+  note         = {QTL analysis modular pipeline for Cassava}
+}
+
+```
+
+
+
+
+
+## License 📄
+
+This pipeline is released under the MIT License (see LICENSE file)

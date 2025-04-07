@@ -1,0 +1,21 @@
+# R
+*.Rhistory
+*.RData
+*.Rproj
+.Rproj.user/
+
+# Python
+__pycache__/
+*.pyc
+
+# Results
+*.log
+*.out
+*.pdf
+*.xlsx
+*.csv
+
+# Conda
+*.conda
+*.env
+env/
