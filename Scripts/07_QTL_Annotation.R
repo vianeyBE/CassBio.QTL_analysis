@@ -126,105 +126,106 @@ QTL_Annotation <- function(dir, name, recursive = F, version, wdyw, prefix) {
     
   }
   
-  # Helper 2: Read and standardize a single QTL file
-  parse_qtl <- function(path) {
+  # Helper 2: Load QTL file(s) 
+  load_qtl <- function(dir, name, recursive = FALSE) {
     
-    readr::read_csv(path, show_col_types = FALSE) %>%
-      select(any_of(c("phenotype", "chr", "lod", "start.marker", "end.marker"))) %>%
-      rename(Phenotype    = phenotype, 
-             Chr          = chr,
-             Start.Marker = start.marker,
-             End.Marker   = end.marker) %>% # Standardize names (keep 'lod' if present)
-      mutate(QTL.Start = as.numeric(stringr::str_extract(Start.Marker, "(?<=_)\\d+(?:\\.\\d+)?")),
-             QTL.End   = as.numeric(stringr::str_extract(End.Marker, "(?<=_)\\d+(?:\\.\\d+)?")),
-             Chr       = as.character(Chr)) %>% # Extract numeric position after the last underscore
-      select(Phenotype, Chr, Start.Marker, End.Marker, QTL.Start, QTL.End, any_of("lod"))
-    
-  }
-  
-  # Helper 3: Find per-chromosome convergence with a sweep-line algorithm
-  converge_qtl <- function(s_QTL) {
-    
-    if (nrow(s_QTL) == 0) {
-      return(tibble(Chr             = character(),
-                    QTL.Start       = numeric(),
-                    QTL.End         = numeric(),
-                    QTL.Convergence = integer(),
-                    QTL_count       = integer(),
-                    QTl.Wide        = numeric()))
-    
+    # Helper function to  read and standardize a single QTL file
+    parse_qtl <- function(path) {
+      
+      readr::read_csv(path, show_col_types = FALSE) %>%
+        select(any_of(c("phenotype", "chr", "lod", "start.marker", "end.marker"))) %>%
+        rename(Phenotype    = phenotype, 
+               Chr          = chr,
+               Start.Marker = start.marker,
+               End.Marker   = end.marker) %>% # Standardize names (keep 'lod' if present)
+        mutate(QTL.Start = as.numeric(stringr::str_extract(Start.Marker, "(?<=_)\\d+(?:\\.\\d+)?")),
+               QTL.End   = as.numeric(stringr::str_extract(End.Marker, "(?<=_)\\d+(?:\\.\\d+)?")),
+               Chr       = as.character(Chr)) %>% # Extract numeric position after the last underscore
+        select(Phenotype, Chr, Start.Marker, End.Marker, QTL.Start, QTL.End, any_of("lod"))
+      
     }
     
-    # Per-chromosome: segment with maximum overlap (ties -> widest, then earliest start)
-    c_QTL <- s_QTL %>% group_by(Chr) %>%
-      group_modify(~{
+    # Helper function to find per-chromosome convergence with a sweep-line algorithm
+    converge_qtl <- function(s_QTL) {
+      
+      # Retrieves data if s_QTL has >1 row
+      if (nrow(s_QTL) == 0) {
+        return(tibble(Chr             = character(),
+                      QTL.Start       = numeric(),
+                      QTL.End         = numeric(),
+                      QTL.Convergence = integer(),
+                      QTL_count       = integer(),
+                      QTl.Wide        = numeric()))
         
-        # 
-        df <- .x
-        n  <- nrow(df)
-        
-        # 
-        if (n == 1) {
+      }
+      
+      # Per-chromosome: segment with maximum overlap (ties -> widest, then earliest start)
+      c_QTL <- s_QTL %>% group_by(Chr) %>%
+        group_modify(~{
           
-          #
-          tibble(QTL.Start = df$QTL.Start, QTL.End = df$QTL.End, QTL.Convergence = 1L)
+          # 
+          df <- .x
+          n  <- nrow(df)
           
-        } else {
-          
-          #
-          ev <- bind_rows(tibble(pos = df$QTL.Start, delta =  1L),
-                          tibble(pos = df$QTL.End,   delta = -1L)) %>%
-            arrange(pos, desc(delta)) # starts before ends at the same position
-          
-          #
-          k <- cumsum(ev$delta)
-          
-          #
-          segs <- tibble(start = ev$pos[-length(ev$pos)],
-                         end = ev$pos[-1],
-                         cov = k[-length(k)]) %>%
-            filter(end > start)
-          
-          #
-          if (nrow(segs) == 0) {
+          # 
+          if (n == 1) {
+            
             #
-            tibble(QTL.Start       = min(df$QTL.Start),
-                   QTL.End         = max(df$QTL.End),
-                   QTL.Convergence = n)
+            tibble(QTL.Start = df$QTL.Start, QTL.End = df$QTL.End, QTL.Convergence = 1L)
+            
           } else {
             
             #
-            max_cov <- max(segs$cov)
+            ev <- bind_rows(tibble(pos = df$QTL.Start, delta =  1L),
+                            tibble(pos = df$QTL.End,   delta = -1L)) %>%
+              arrange(pos, desc(delta)) # starts before ends at the same position
             
-            # 
-            segs %>%
-              filter(cov == max_cov) %>%
-              mutate(width = end - start) %>%
-              slice_max(width, n = 1, with_ties = TRUE) %>%
-              slice_min(start, n = 1, with_ties = TRUE) %>%
-              transmute(QTL.Start       = start, 
-                        QTL.End         = end, 
-                        QTL.Convergence = as.integer(cov))
+            #
+            k <- cumsum(ev$delta)
+            
+            #
+            segs <- tibble(start = ev$pos[-length(ev$pos)],
+                           end = ev$pos[-1],
+                           cov = k[-length(k)]) %>%
+              filter(end > start)
+            
+            #
+            if (nrow(segs) == 0) {
+              #
+              tibble(QTL.Start       = min(df$QTL.Start),
+                     QTL.End         = max(df$QTL.End),
+                     QTL.Convergence = n)
+            } else {
+              
+              #
+              max_cov <- max(segs$cov)
+              
+              # 
+              segs %>%
+                filter(cov == max_cov) %>%
+                mutate(width = end - start) %>%
+                slice_max(width, n = 1, with_ties = TRUE) %>%
+                slice_min(start, n = 1, with_ties = TRUE) %>%
+                transmute(QTL.Start       = start, 
+                          QTL.End         = end, 
+                          QTL.Convergence = as.integer(cov))
+              
+            }
             
           }
           
-        }
-        
-      }) %>%
-      ungroup() %>%
-      left_join(count(s_QTL, Chr, name = "QTL_count"), by = "Chr") %>%
-      mutate(QTl.Wide = QTL.End - QTL.Start) %>%
-      select(Chr, QTL.Start, QTL.End, QTL.Convergence, QTL_count, QTl.Wide)
+        }) %>%
+        ungroup() %>%
+        left_join(count(s_QTL, Chr, name = "QTL_count"), by = "Chr") %>%
+        mutate(QTl.Wide = QTL.End - QTL.Start) %>%
+        select(Chr, QTL.Start, QTL.End, QTL.Convergence, QTL_count, QTl.Wide)
+      
+      # Retrieve data
+      c_QTL
+      
+    }
     
-    # Retrieve data
-    c_QTL
-    
-  }
-  
-  # Helper 4: Unified loader 
-  load_qtl <- function(dir, name, recursive = FALSE) {
-    
-    # 
+    # Load file(s) depending of recursive
     if (isTRUE(recursive)) {
       
       # Informative message
@@ -239,7 +240,7 @@ QTL_Annotation <- function(dir, name, recursive = F, version, wdyw, prefix) {
       # Informative message
       message(paste("QTL mapping files found:", length(files)))
       
-      #
+      # Check files
       if (length(files) == 0) stop("No files found. Check 'dir', 'name' and extension.")
       
       # Informative message
@@ -250,25 +251,25 @@ QTL_Annotation <- function(dir, name, recursive = F, version, wdyw, prefix) {
       # Informative message
       message("Loading QTL file...")
       
-      #
+      # Ensure consistency
       files <- name
       
-      #
+      # Check files
       if (!file.exists(files)) stop("File not found: ", files)
       
     }
     
     # s_QTL: single long table of all QTLs
     s_QTL <- purrr::map_dfr(files, parse_qtl) %>%
-      mutate(Chr = as.numeric(Chr),
+      mutate(Chr       = as.numeric(Chr),
              QTL.Start = as.numeric(QTL.Start),
-             QTL.End = as.numeric(QTL.End))
+             QTL.End   = as.numeric(QTL.End))
     
     # c_QTL: per-chromosome convergence
     c_QTL <- converge_qtl(s_QTL) %>%
-      mutate(Chr = as.numeric(Chr),
+      mutate(Chr       = as.numeric(Chr),
              QTL.Start = as.numeric(QTL.Start),
-             QTL.End = as.numeric(QTL.End))
+             QTL.End   = as.numeric(QTL.End))
     
     # Informative message
     message("QTL file(s) loaded successfully")
@@ -278,19 +279,19 @@ QTL_Annotation <- function(dir, name, recursive = F, version, wdyw, prefix) {
     
   }
   
-  # Helper 5: Classify gene–QTL relationship
-  classify_location <- function(df) {
-    df %>% mutate(Location = case_when(
-      Gen.Start >= QTL.Start & Gen.End <= QTL.End ~ "Gene inside QTL",
-      QTL.Start >= Gen.Start & QTL.End <= Gen.End ~ "QTL inside gene",
-      TRUE                                        ~ "Gene overlaps QTL"))
-  }
-  
-  # Helper 6: # Filter gene info and match it with QTL data
+  # Helper 3: # Filter gene info and match it with QTL data
   annotate_genes <- function(s_QTL, c_QTL, gff) {
     
     # Informative message
     message("Matching genes to s_QTL and c_QTL intervals...")
+    
+    # Helper function to classify gene–QTL relationship
+    classify_location <- function(df) {
+      df %>% mutate(Location = case_when(
+        Gen.Start >= QTL.Start & Gen.End <= QTL.End ~ "Gene inside QTL",
+        QTL.Start >= Gen.Start & QTL.End <= Gen.End ~ "QTL inside gene",
+        TRUE                                        ~ "Gene overlaps QTL"))
+    }
     
     # s_QTL x GFF
     s_gff_m <- gff %>%
@@ -319,7 +320,7 @@ QTL_Annotation <- function(dir, name, recursive = F, version, wdyw, prefix) {
     
   }
   
-  # # Helper 7: build a named list of data frames per chromosome
+  # Helper 4: build a named list of data frames per chromosome
   sheet_list <- function(df, chr_vec, label = "Chr") {
     
     # Empty frame with same columns
@@ -328,12 +329,13 @@ QTL_Annotation <- function(dir, name, recursive = F, version, wdyw, prefix) {
     # 
     setNames(lapply(chr_vec, function(ch) {
       
-      # 
+      # Filter a temp data
       tmp <- dplyr::filter(df, Chr == ch)
       
       #
       if (nrow(tmp) == 0) proto else tmp}),
       
+      # 
       sprintf("%s_%02d", label, as.integer(chr_vec)))
     
   }
