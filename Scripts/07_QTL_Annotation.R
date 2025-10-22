@@ -2,648 +2,442 @@
 # Description: Retrieves the annotation of closest genes down and up stream
 # Output: CSV file with the annotation results
 # 
-# Authors: Camilo E. Sanchez (c.e.sanchez@cgiar.org) and Vianey Barrera-Enriquez (vpbarrera@gmail.com)
+# Authors (1): Camilo E. Sanchez (c.e.sanchez@cgiar.org)
+# Authors (2): Vianey Barrera-Enriquez (vpbarrera@gmail.com)
 # 
 # Arguments:
-# version: You can choose between the genome of reference version 6.1 or 8.1 (Options: 6.1 or 8.1)
-# wdyw: What are you looking for to annotate (Options: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR)
-# prefix: Prefix name that indicates how the outputs will be saved
-# Wdir: Name of the directory that contains the GAPIT results. For example: home/user/folder
-# name: Enter the path or the name of file names to look for. For example: QTL_LOD_Intervals
-# recursive: Boolean string. It determines if the function perform a recursive search or not (Default = F)
+# dir: Path to the folder that contains the QTL results (e.g., /home/user/folder)
+# name: Name of file names to look for (e.g., QTL_Intervals)
+# wdyw: What to annotate (Opts: CDS, five_prime_UTR, gene, mRNA, three_prime_UTR)
+# recursive: Perform a recursive search or not (Boolean string. Default = F)
+# version: Genome of reference version (Opts: 6.1 or 8.1)
+# prefix: Prefix name. How the outputs will be saved (e.g., Flowering)
+
 
 
 
 ###### To do ######
-# 1: Add trait name in c_QTL
-# 2: Add deleting gene duplicates  
+# 1: Add trait name in c_QTL 
+
 
 
 
 # 0: Function init -------------------------------------------------------------
-
-QTL_Annotation <- function(version, wdyw, prefix, Wdir, name, recursive){
+QTL_Annotation <- function(dir, name, recursive, version, wdyw, prefix) {
   
   
   
-  # 1: Load all the directories, info, and data --------------------------------
   
+  # 1: Set working directory and load package ----------------------------------
   # Load packages
-  if (!require(tidyverse)) install.packages(tidyverse)
-  if (!require(openxlsx)) install.packages(openxlsx)
+  if (!require("tidyverse")) install.packages("tidyverse")
+  if (!require("openxlsx")) install.packages("openxlsx")
   
   library(tidyverse)
   library(openxlsx)
   
-  # Load annotation data and re-organize it
-  if (version == 6.1){
-    
-    # Informative message
-    message("Loading required files to do the annotation")
-    
-    # Set objects
-    Ddir <- 
-      "D:/OneDrive - CGIAR/00_BioInf_Platform/00_Basics/03_Server_Bioinfo-CO/00_ReferenceGenome/Mesculenta_v6.1/"
-    annot <- "Mesculenta_305_v6.1.annotation_info.txt"
-    gff <- "Mesculenta_305_v6.1.gene.gff3"
-    
-    # Read and modify the files
-    annot <- read.delim(paste0(Ddir, annot), header = F) %>%
-      rename(ID = 1, Name = 2, Trans = 3, Peptide = 4, GO = 10, AT.name = 12, Annotation = 13) %>%
-      select(ID, Name, GO, Annotation)
-    
-    gff <- read.delim(paste0(Ddir, gff), header = F, comment.char = "#") %>%
-      rename(Chr = V1, What = V3, Start = V4, End = V5, Strand = V7) %>%
-      tidyr::separate(col = V9, into = c("ID", "na"), sep = ";", extra = "drop") %>%
-      tidyr::separate(col = ID, into = c("na2", "na3"), sep = "=", extra = "drop") %>%
-      tidyr::separate(col = na3, into = c("Name", "na4"), sep = ".v", extra = "drop") %>%
-      select(Chr, What, Start, End, Name, Strand) %>%
-      dplyr::filter(grepl("Chromosome", Chr)) %>%
-      mutate(Chr = recode(Chr, Chromosome01 = 1, Chromosome02 = 2, Chromosome03 = 3, Chromosome04 = 4,
-                          Chromosome05 = 5, Chromosome06 =  6, Chromosome07 = 7, Chromosome08 = 8, 
-                          Chromosome09 = 9, Chromosome10 = 10, Chromosome11 = 11, Chromosome12 = 12,
-                          Chromosome13 = 13, Chromosome14 = 14, Chromosome15 = 15, Chromosome16 = 16, 
-                          Chromosome17 = 17, Chromosome18 = 18)) %>%
-      dplyr::filter(What %in% wdyw)
-    
-    # Informative message
-    message("Annotation files loaded succesfully")
-    
-  } else {
-    
-    # Informative message
-    message("Loading required files to do the annotation")
-    
-    # Set objects
-    Ddir <- 
-      "D:/OneDrive - CGIAR/00_BioInf_Platform/00_Basics/03_Server_Bioinfo-CO/00_ReferenceGenome/Mesculenta_v8.1/"
-    annot <- "Mesculenta_671_v8.1.annotation_info.txt"
-    gff <- "Mesculenta_671_v8.1.gene.gff3"
-
-    # Read and modify the files
-    annot <- read.delim(paste0(Ddir, annot), header = T) %>%
-      rename(ID = 1, Name = 2, Trans = 3, Peptide = 4, GO = 10, AT.name = 11, Annotation = 12) %>%
-      select(ID, Name, GO, Annotation)
-    
-    gff <- read.delim(paste0(Ddir, gff), header = F, comment.char = "#") %>%
-      rename(Chr = V1, What = V3, Start = V4, End = V5, Strand = V7) %>%
-      tidyr::separate(col = V9, into = c("ID", "na"), sep = ";", extra = "drop") %>%
-      tidyr::separate(col = ID, into = c("na2", "na3"), sep = "=", extra = "drop") %>%
-      tidyr::separate(col = na3, into = c("Name", "na4"), sep = ".v", extra = "drop") %>%
-      select(Chr, What, Start, End, Name, Strand) %>%
-      dplyr::filter(grepl("Chromosome", Chr)) %>%
-      mutate(Chr = recode(Chr, Chromosome01 = 1, Chromosome02 = 2, Chromosome03 = 3, Chromosome04 = 4,
-                          Chromosome05 = 5, Chromosome06 =  6, Chromosome07 = 7, Chromosome08 = 8, 
-                          Chromosome09 = 9, Chromosome10 = 10, Chromosome11 = 11, Chromosome12 = 12,
-                          Chromosome13 = 13, Chromosome14 = 14, Chromosome15 = 15, Chromosome16 = 16, 
-                          Chromosome17 = 17, Chromosome18 = 18)) %>%
-      dplyr::filter(What %in% wdyw)
-    
-    # Informative message
-    message("Annotation files loaded succesfully")
-    
-  }
   
   
   
-  # 2: Find the CSV(s) with the results and creates the data frames ------------
-  if (recursive == T){
+  # 2: Build helper functions --------------------------------------------------
+  # Helper 1: Load annotation data (annot and gff3 files)
+  load_annotation <- function(version = c("6.1", "8.1"), wdyw) {
     
-    # Set working directory
-    setwd(Wdir)
-    
-    # Get the names of the files
-    message("Getting list of CSV files...")
-    names <- list.files(path = Wdir, pattern = paste0(name, "."), all.files = F, 
-                        full.names = F, recursive = T)
-    
-    # Informative messages
-    message(paste("QTL mapping files found:", length(names)))
-    message("Reading QTL mapping files...")
-    
-    # Create an empty list to store data
-    csv_L <- list()
-    
-    # Loop to find, read, rename, modify and save all QTL files
-    for (i in 1:length(names)){
-      
-      # Database handling 
-      csv_L[[i]] <- read.delim(paste0(Wdir, names[i])) %>%
-        select(phenotype, chr, start.marker, end.marker) %>%
-        mutate(start = start.marker) %>%
-        tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_"), 
-                        extra = "drop") %>%
-        mutate(end = end.marker) %>%
-        tidyr::separate(col = end, into = c("na", "End"), sep = paste("_"), 
-                        extra = "drop") %>%
-        select(phenotype, chr, lod, start.marker, end.marker, Start, End) %>%
-        rename(Phenotype = phenotype, Chr = chr, 
-               Start.Marker = start.marker, End.Marker = end.marker)
-      
-      # Progress bar
-      cat('\r', i, ' files processed |', rep('=', i / 4), 
-          ifelse(i == length(names), '|\n', '>'), sep = '')
-      
-    }
-    
-    # Creates the single QTL data frame (s_QTL)
-    # Merge the data frames of the list in a single data frame
-    s_QTL <- bind_rows(csv_L)
-    s_QTL$Start <- as.numeric(s_QTL$Start)
-    s_QTL$End <- as.numeric(s_QTL$End)
-    
-    
-    
-    # Creates the converged QTL data frame (c_QTL)
-    # Creates am empty list to save the QTLs converge regions per chromosomes 
-    best <- list()
-    
-    # Find the regions in which converge most of QTLs per chromosome
-    for (p in unique(s_QTL$Chr)){
-      
-      # Filter the QTL data per chromosome
-      temp <- dplyr::filter(s_QTL, Chr == p)
-      
-      # Sort the regions based on their start positions
-      temp <- temp[order(temp$Start), ]
-      
-      # Initialize variables to keep track of the best region convergence
-      best_start <- 0
-      best_end <- 0
-      max_convergence <- 1
-      
-      # Conditional to see if there is only one QTL per chromosome 
-      if (nrow(temp) > 1){
-        
-        # Iterate over each region and find the convergence
-        for (i in 1:(nrow(temp) - 1)){
-          
-          # Get the current region
-          region_start <- temp$Start[i]
-          region_end <- temp$End[i]
-          
-          # Calculate the convergence of the current region
-          convergence <- 1
-          
-          # Iterate over the subsequent regions
-          for (j in (i + 1):nrow(temp)){
-            
-            # Get the next region
-            next_region_start <- temp$Start[j]
-            next_region_end <- temp$End[j]
-            
-            # Check if the next region is within the current region
-            if (next_region_start >= region_start && next_region_end <= region_end){
-              
-              # Update the convergence count
-              convergence <- convergence + 1
-              
-              # Update region start
-              region_start <- next_region_start
-              
-            } else {
-              
-              # Save the best convergence regions
-              best_start <- region_start
-              best_end <- region_end
-              
-            }
-            
-          }
-          
-          # Check if the current region has higher convergence than the previous best
-          if (convergence > max_convergence){
-            best_start <- region_start
-            best_end <- region_end
-            max_convergence <- convergence
-            
-          }
-          
-        }
-        
-      } else {
-        
-        # Gives the values directly
-        best_start <- temp$Start[1]
-        best_end <- temp$End[1]
-        Convergence <- 1
-        Chr <- p
-        
-      }
-      
-      # Print the region with the highest convergence
-      best[[p]] <- data.frame(Chr = p, Start = best_start, End = best_end, 
-                              Convergence = max_convergence)
-      
-    }
-    
-    # Count the number of QTLs per chromosome
-    num_chrs <- data.frame(table(s_QTL$Chr))
-    colnames(num_chrs) <- c("Chr", "QTL_count")
-    num_chrs$Chr <- as.integer(as.character(num_chrs$Chr))
-    
-    # Merge the data
-    c_QTL <- bind_rows(best)
-    c_QTL <- inner_join(c_QTL, num_chrs, by = "Chr")
-    c_QTL <- c_QTL %>% mutate(QTl.Wide = End - Start) %>%
-      rename(QTL.Start = Start, QTL.End = End, QTL.Convergence = Convergence) %>%
-      select(Chr, QTL.Start, QTL.End, QTL.Convergence, QTL_count, QTl.Wide)
+    # Verify arguments
+    version <- match.arg(as.character(version), c("6.1", "8.1"))
     
     # Informative message
-    message("QTL files loaded succesfully")
+    message("Loading required files to do the annotation...")
     
+    # Set the path for the data
+    dir_61 <- "D:/OneDrive - CGIAR/00_BioInf_Platform/00_Basics/03_Server_Bioinfo-CO/00_ReferenceGenome/Mesculenta_v6.1/"
+    dir_81 <- "D:/OneDrive - CGIAR/00_BioInf_Platform/00_Basics/03_Server_Bioinfo-CO/00_ReferenceGenome/Mesculenta_v8.1/"
+    
+    # Resolve paths by version 
+    if (version == "6.1") {
+      root        <- dir_61
+      annot_file  <- "Mesculenta_305_v6.1.annotation_info.txt"
+      gff_file    <- "Mesculenta_305_v6.1.gene.gff3"
+      has_header  <- FALSE
     } else {
-    
-    # Set working directory
-    setwd(Wdir)
-    
-    # Read the files with the results
-    # Creates the single QTL data frame (s_QTL)
-    s_QTL <- read.csv(paste0(name)) %>%
-      select(phenotype, chr, start.marker, end.marker) %>%
-      mutate(start = start.marker) %>%
-      tidyr::separate(col = start, into = c("na", "Start"), sep = paste("_"), 
-                      extra = "drop") %>%
-      mutate(end = end.marker) %>%
-      tidyr::separate(col = end, into = c("na", "End"), sep = paste("_"), 
-                      extra = "drop") %>%
-      select(phenotype, chr, start.marker, end.marker, Start, End) %>%
-      rename(Phenotype = phenotype, Chr = chr, 
-             Start.Marker = start.marker, End.Marker = end.marker)
-    
-    # Re format columns
-    s_QTL$Start <- as.numeric(s_QTL$Start)
-    s_QTL$End <- as.numeric(s_QTL$End)
-    
-    
-    
-    # Creates the converged QTL data frame (c_QTL)
-    # Creates am empty list to save the QTLs converge regions per chromosomes 
-    best <- list()
-    
-    # Find the regions in which converge most of QTLs per chromosome
-    for (p in unique(s_QTL$Chr)){
-      
-      # Filter the QTL data per chromosome
-      temp <- dplyr::filter(s_QTL, Chr == p)
-      
-      # Sort the regions based on their start positions
-      temp <- temp[order(temp$Start), ]
-      
-      # Initialize variables to keep track of the best region convergence
-      best_start <- 0
-      best_end <- 0
-      max_convergence <- 1
-      
-      # Conditional to see if there is only one QTL per chromosome 
-      if (nrow(temp) > 1){
-        
-        # Iterate over each region and find the convergence
-        for (i in 1:(nrow(temp) - 1)){
-          
-          # Get the current region
-          region_start <- temp$Start[i]
-          region_end <- temp$End[i]
-          
-          # Calculate the convergence of the current region
-          convergence <- 1
-          
-          # Iterate over the subsequent regions
-          for (j in (i + 1):nrow(temp)){
-            
-            # Get the next region
-            next_region_start <- temp$Start[j]
-            next_region_end <- temp$End[j]
-            
-            # Check if the next region is within the current region
-            if (next_region_start >= region_start && next_region_end <= region_end){
-              
-              # Update the convergence count
-              convergence <- convergence + 1
-              
-              # Update region start
-              region_start <- next_region_start
-              
-            } else {
-              
-              # Save the best convergence regions
-              best_start <- region_start
-              best_end <- region_end
-              
-            }
-          }
-          
-          # Check if the current region has higher convergence than the previous best
-          if (convergence > max_convergence){
-            
-            # Save the best convergence regions
-            best_start <- region_start
-            best_end <- region_end
-            max_convergence <- convergence
-            
-          }
-        }
-        
-      } else {
-        
-        # Gives the values directly
-        best_start <- temp$Start[1]
-        best_end <- temp$End[1]
-        Convergence <- 1
-        Chr <- p
-        
-      }
-      
-      # Print the region with the highest convergence
-      best[[p]] <- data.frame(Chr = p, Start = best_start, End = best_end, 
-                              Convergence = max_convergence)
-      
+      root        <- dir_81
+      annot_file  <- "Mesculenta_671_v8.1.annotation_info.txt"
+      gff_file    <- "Mesculenta_671_v8.1.gene.gff3"
+      has_header  <- TRUE
     }
     
-    # Count the number of QTLs per chromosome
-    num_chrs <- data.frame(table(s_QTL$Chr))
-    colnames(num_chrs) <- c("Chr", "QTL_count")
-    num_chrs$Chr <- as.integer(as.character(num_chrs$Chr))
+    # Set data paths
+    annot_path <- file.path(root, annot_file)
+    gff_path   <- file.path(root, gff_file)
     
-    # Merge the data
-    c_QTL <- bind_rows(best)
-    c_QTL <- inner_join(c_QTL, num_chrs, by = "Chr")
-    c_QTL <- c_QTL %>% mutate(QTl.Wide = End - Start) %>%
-      rename(QTL.Start = Start, QTL.End = End, QTL.Convergence = Convergence) %>%
-      select(Chr, QTL.Start, QTL.End, QTL.Convergence, QTL_count, QTl.Wide)
+    # Check if the files exist
+    if (!file.exists(annot_path)) stop("Annotation file not found: ", annot_path)
+    if (!file.exists(gff_path))   stop("GFF file not found: ", gff_path)
+    
+    # Read annotation table
+    if (version == "6.1") { # v6.1: no header; keep ID, Name, GO, Annotation
+      annot_raw <- readr::read_tsv(annot_path, col_names = F, show_col_types = F)
+      annot <- tibble(Name       = annot_raw[[2]],
+                      GO         = annot_raw[[10]],
+                      Annotation = annot_raw[[13]])
+    } else {
+      # v8.1: header present; keep Name, GO, Annotation (ID not provided)
+      annot_raw <- readr::read_tsv(annot_path, col_names = T, show_col_types = F)
+      annot <- tibble(Name       = annot_raw[[2]],
+                      GO         = annot_raw[[10]],
+                      Annotation = annot_raw[[12]])
+    }
+    
+    # Read and tidy GFF3
+    # Columns: Chr (V1), What (V3), Start (V4), End (V5), Strand (V7), Attr (V9)
+    gff_raw <- readr::read_tsv(gff_path, col_names = F, comment = "#", show_col_types = F)
+    
+    gff <- gff_raw %>% transmute(Chr       = X1,
+                                 What      = X3,
+                                 Gen.Start = as.numeric(X4),
+                                 Gen.End   = as.numeric(X5),
+                                 Strand    = X7,
+                                 attr      = X9) %>%
+      mutate(Name = stringr::str_match(attr, "ID=([^;]+)")[, 2],
+             Name = stringr::str_remove(Name, "\\.v.*$")) %>%
+      select(Chr, What, Gen.Start, Gen.End, Name, Strand) %>%
+      filter(stringr::str_detect(Chr, "Chromosome")) %>%
+      mutate(Chr = as.integer(stringr::str_extract(Chr, "\\d+"))) %>%
+      filter(What %in% wdyw)
     
     # Informative message
-    message("QTL files loaded succesfully")
+    message("Annotation files loaded successfully")
     
-    }
-  
-  
-  
-  # 3: Match the QTL results with the gene annotation databases ----------------
-  # Conditional: If there is at least one QTL to annotate, the function continues
-  if (dim(s_QTL)[1] > 0){
-    
-    # Informative message
-    message(paste("There are", dim(s_QTL)[1], "QTLs to annotate"))
-    
-    
-    
-    # 3.1 Function pathway for single QTLs (s_QTL) -----------------------------
-    
-    # 3.1.1 Starts filtering the gff3 data -------------------------------------
-    # Informative message
-    message("Obtaining gene information...")
-    
-    # Creates an empty list object to save the data
-    s_gff_l <- list()
-    
-    # Filters and merges the gff3 data
-    for (i in 1:nrow(s_QTL)){
-      
-      # Filter the gff3 file per chromosome
-      data <- dplyr::filter(gff, s_QTL$Chr[i] == Chr)
-      
-      # Combine the different filtered data
-      s_gff_l[[i]] <- rbind(
-        
-        # Looking for genes located inside the QTL
-        dplyr::filter(data, s_QTL$Start[i] <= Start & s_QTL$Start[i] <= End &
-                        s_QTL$End[i] >= Start & s_QTL$End[i] >= End) %>%
-          mutate(Trait = s_QTL$Phenotype[i], Location = "Gene inside QTL",
-                 QTL.Start = s_QTL$Start[i], QTL.End = s_QTL$End[i]) %>%
-          rename(Gen.Start = Start, Gen.End = End),
-        
-        # Looking for genes that contain the QTL
-        dplyr::filter(data, s_QTL$Start[i] >= Start & s_QTL$Start[i] <= End &
-                        s_QTL$End[i] >= Start & s_QTL$End[i] <= End) %>%
-          mutate(Trait = s_QTL$Phenotype[i], Location = "Gene inside QTL",
-                 QTL.Start = s_QTL$Start[i], QTL.End = s_QTL$End[i]) %>%
-          rename(Gen.Start = Start, Gen.End = End),
-        
-        # Looking genes down stream 
-        dplyr::filter(data, s_QTL$Start[i] >= Start & s_QTL$Start[i] <= End) %>%
-          mutate(Trait = s_QTL$Phenotype[i], Location = "Gene overlaps QTL",
-                 QTL.Start = s_QTL$Start[i], QTL.End = s_QTL$End[i]) %>%
-          rename(Gen.Start = Start, Gen.End = End),
-        
-        # Looking genes up stream
-        dplyr::filter(data, s_QTL$End[i] >= Start & s_QTL$End[i] <= End) %>%
-          mutate(Trait = s_QTL$Phenotype[i], Location = "Gene overlaps QTL",
-                 QTL.Start = s_QTL$Start[i], QTL.End = s_QTL$End[i]) %>%
-          rename(Gen.Start = Start, Gen.End = End)
-        
-      )
-      
-      # Progress bar
-      cat('\r', i, ' rows processed |', rep('=', i / 4), ifelse(i == nrow(s_QTL), '|\n', '>'), sep = '')
-      
-    }
-    
-    # Merge all the data frames of the list in a unique data frame
-    s_gff_m <- bind_rows(s_gff_l) %>%
-      select(Trait, Chr, QTL.Start, QTL.End, What, Name, Location, 
-             Gen.Start, Gen.End, Strand)
-    
-    
-    
-    # 3.2.2 Continues filtering the annotation data ----------------------------
-    # Informative message
-    message("Obtaining gene annotation...")
-    
-    # Creates an empty list object to save the data
-    s_annot_l <- list()
-    
-    # Filters and merges the annot data
-    for (i in 1:nrow(s_gff_m)){
-      
-      # Filter the annotation data and creates new columns based on previous data
-      s_annot_l[[i]] <- filter(annot, Name == s_gff_m$Name[i]) %>%
-        mutate(Trait = s_gff_m$Trait[i], Chr = s_gff_m$Chr[i], 
-               QTL.Start = s_gff_m$QTL.Start[i], QTL.End = s_gff_m$QTL.End[i],
-               What = s_gff_m$What[i], Location = s_gff_m$Location[i],
-               Gen.Start = s_gff_m$Gen.Start[i], Gen.End = s_gff_m$Gen.End[i],
-               Strand = s_gff_m$Strand[i])
-      
-      # Progress bar
-      cat('\r', i, ' rows processed |', rep('=', i / 10), ifelse(i == nrow(s_gff_m), '|\n', '>'), sep = '')
-      
-    }
-    
-    
-    
-    # 3.2.3 It ends by formatting the data frame -------------------------------
-    
-    # Merge the data frames of the list in a single data frame and modify it
-    s_QTL_annotation <- bind_rows(s_annot_l) %>%
-      select(Trait, Chr, QTL.Start, QTL.End, What, Name, Location, Gen.Start, 
-             Gen.End, Strand, GO, Annotation)
-    
-    
-    
-    # 3.2 Function pathway for merged QTLs (c_QTL) -----------------------------
-    
-    # 3.2.1 Starts filtering the gff3 data -------------------------------------
-    # Informative messages
-    message("Obtaining gene information...")
-    
-    # Creates an empty list object to save the data
-    c_gff_l <- list()
-    
-    # Filters and merges the gff3 data
-    for (i in 1:nrow(c_QTL)){
-      
-      # Filter the gff3 file per chromosome
-      data <- dplyr::filter(gff, c_QTL$Chr[i] == Chr)
-      
-      # Combine the different filtered data
-      c_gff_l[[i]] <- rbind(
-        
-        # Looking for genes located inside the QTL
-        dplyr::filter(data, c_QTL$QTL.Start[i] <= Start & c_QTL$QTL.Start[i] <= End &
-                        c_QTL$QTL.End[i] >= Start & c_QTL$QTL.End[i] >= End) %>%
-          mutate(QTL.Start = c_QTL$QTL.Start[i], QTL.End = c_QTL$QTL.End[i],
-                 Location = "Gene inside QTL") %>%
-          rename(Gen.Start = Start, Gen.End = End),
-        
-        # Looking for genes that contain the QTL
-        dplyr::filter(data, c_QTL$QTL.Start[i] >= Start & c_QTL$QTL.Start[i] <= End &
-                        c_QTL$QTL.End[i] >= Start & c_QTL$QTL.End[i] <= End) %>%
-          mutate(QTL.Start = c_QTL$QTL.Start[i], QTL.End = c_QTL$QTL.End[i],
-                 Location = "QTL inside gene") %>%
-          rename(Gen.Start = Start, Gen.End = End),
-        
-        # Looking genes down stream 
-        dplyr::filter(data, c_QTL$QTL.Start[i] >= Start & c_QTL$QTL.Start[i] <= End) %>%
-          mutate(QTL.Start = c_QTL$QTL.Start[i], QTL.End = c_QTL$QTL.End[i],
-                 Location = "Gene overlaps QTL") %>%
-          rename(Gen.Start = Start, Gen.End = End),
-        
-        # Looking genes up stream
-        dplyr::filter(data, c_QTL$QTL.End[i] >= Start & c_QTL$QTL.End[i] <= End) %>%
-          mutate(QTL.Start = c_QTL$QTL.Start[i], QTL.End = c_QTL$QTL.End[i],
-                 Location = "Gene overlaps QTL") %>%
-          rename(Gen.Start = Start, Gen.End = End)
-        
-      )
-      
-      # Progress bar
-      cat('\r', i, ' files processed |', rep('=', i / 1), ifelse(i == nrow(c_QTL), '|\n', '>'), sep = '')
-      
-    }
-    
-    # Merge the data frames of the list in a single data frame
-    c_gff_m <- bind_rows(c_gff_l) %>%
-      select(Chr, QTL.Start, QTL.End, What, Name, Location, Gen.Start, Gen.End, Strand)
-    
-    
-    
-    # 3.2.2 Continues filtering the annotation data ----------------------------
-    # Informative message
-    message("Obtaining gene annotation...")
-    
-    # Creates an empty list object to save the data
-    c_annot_l <- list()
-    
-    # Filters and merges the annot data
-    for (i in 1:nrow(c_gff_m)){
-      
-      # Filter the annotation data and creates new columns based on previous data
-      c_annot_l[[i]] <- filter(annot, Name == c_gff_m$Name[i]) %>%
-        mutate(Chr = c_gff_m$Chr[i], What = c_gff_m$What[i], Location = c_gff_m$Location[i],
-               Gen.Start = c_gff_m$Gen.Start[i], Gen.End = c_gff_m$Gen.End[i],
-               QTL.Start = c_gff_m$QTL.Start[i], QTL.End = c_gff_m$QTL.End[i],
-               Strand = c_gff_m$Strand[i])
-      
-      # Progress bar
-      cat('\r', i, ' rows processed |', rep('=', i / 10), ifelse(i == nrow(c_annot_l), '|\n', '>'), sep = '')
-      
-    }
-    
-    
-    
-    # 3.2.3 It ends by formatting the data frame -------------------------------
-    
-    # Merge the data frames of the list in a single data frame and modify it
-    c_QTL_annotation <- bind_rows(c_annot_l) %>% 
-      select(Chr, QTL.Start, QTL.End, What, Name, Location, Gen.Start, Gen.End, 
-             Strand, GO, Annotation)
-    
-    
-    
-    # 4: Saving the outputs ----------------------------------------------------
-    
-    # Create empty lists
-    s_QTL_annotation_l <- list()
-    c_QTL_annotation_l <- list()
-    
-    # Split the data in a list by saving each chromosome in a different data frame
-    for (p in sort(unique(s_QTL$Chr))){
-      
-      # Filter the QTL data per chromosome
-      s_QTL_annotation_l[[p]] <- dplyr::filter(s_QTL_annotation, Chr == p)
-      c_QTL_annotation_l[[p]] <- dplyr::filter(c_QTL_annotation, Chr == p)
-      
-    }
-    
-    # Create empty Excel workbooks
-    s_QTL_annotation_wb <- createWorkbook()
-    c_QTL_annotation_wb <- createWorkbook()
-    
-    # Add sheets to the workbook
-    for (p in sort(unique(s_QTL$Chr))){
-      
-      # Set sheet name
-      addWorksheet(s_QTL_annotation_wb, sheetName = paste0("Chr_0", p))
-      addWorksheet(c_QTL_annotation_wb, sheetName = paste0("Chr_0", p))
-      
-      # Obtain data
-      writeData(s_QTL_annotation_wb, sheet = paste0("Chr_0", p),
-                x = s_QTL_annotation_l[[p]], startCol = 1, startRow = 1)
-      writeData(c_QTL_annotation_wb, sheet = paste0("Chr_0", p),
-                x = c_QTL_annotation_l[[p]], startCol = 1, startRow = 1)
-      
-    }
-    
-    # Save the workbooks
-    # Informative messages
-    message("\nSaving output files as:")
-    message(paste0(prefix, ".single_QTL_annotation.xlsx' and '", prefix, ".merged_QTL_annotation.xlsx'"))
-    
-    saveWorkbook(s_QTL_annotation_wb, paste0(prefix, ".single_QTL_annotation.xlsx"), 
-                 overwrite = T)
-    saveWorkbook(c_QTL_annotation_wb, paste0(prefix, ".merged_QTL_annotation.xlsx"), 
-                 overwrite = T)
-    
-    message("Done!")
-    
-  } else {
-    
-    # Informative message
-    message("No QTLs to annotate")
+    # Retrieve data
+    list(annot = annot, gff = gff)
     
   }
+  
+  # Helper 2: Read and standardize a single QTL file
+  parse_qtl <- function(path) {
+    
+    readr::read_csv(path, show_col_types = FALSE) %>%
+      select(any_of(c("phenotype", "chr", "lod", "start.marker", "end.marker"))) %>%
+      rename(Phenotype    = phenotype, 
+             Chr          = chr,
+             Start.Marker = start.marker,
+             End.Marker   = end.marker) %>% # Standardize names (keep 'lod' if present)
+      mutate(QTL.Start = as.numeric(stringr::str_extract(Start.Marker, "(?<=_)\\d+(?:\\.\\d+)?")),
+             QTL.End   = as.numeric(stringr::str_extract(End.Marker, "(?<=_)\\d+(?:\\.\\d+)?")),
+             Chr       = as.character(Chr)) %>% # Extract numeric position after the last underscore
+      select(Phenotype, Chr, Start.Marker, End.Marker, QTL.Start, QTL.End, any_of("lod"))
+    
+  }
+  
+  # Helper 3: Find per-chromosome convergence with a sweep-line algorithm
+  converge_qtl <- function(s_QTL) {
+    
+    if (nrow(s_QTL) == 0) {
+      return(tibble(Chr             = character(),
+                    QTL.Start       = numeric(),
+                    QTL.End         = numeric(),
+                    QTL.Convergence = integer(),
+                    QTL_count       = integer(),
+                    QTl.Wide        = numeric()))
+    
+    }
+    
+    # Per-chromosome: segment with maximum overlap (ties -> widest, then earliest start)
+    c_QTL <- s_QTL %>% group_by(Chr) %>%
+      group_modify(~{
+        
+        # 
+        df <- .x
+        n  <- nrow(df)
+        
+        # 
+        if (n == 1) {
+          
+          #
+          tibble(QTL.Start = df$QTL.Start, QTL.End = df$QTL.End, QTL.Convergence = 1L)
+          
+        } else {
+          
+          #
+          ev <- bind_rows(tibble(pos = df$QTL.Start, delta =  1L),
+                          tibble(pos = df$QTL.End,   delta = -1L)) %>%
+            arrange(pos, desc(delta)) # starts before ends at the same position
+          
+          #
+          k <- cumsum(ev$delta)
+          
+          #
+          segs <- tibble(start = ev$pos[-length(ev$pos)],
+                         end = ev$pos[-1],
+                         cov = k[-length(k)]) %>%
+            filter(end > start)
+          
+          #
+          if (nrow(segs) == 0) {
+            #
+            tibble(QTL.Start       = min(df$QTL.Start),
+                   QTL.End         = max(df$QTL.End),
+                   QTL.Convergence = n)
+          } else {
+            
+            #
+            max_cov <- max(segs$cov)
+            
+            # 
+            segs %>%
+              filter(cov == max_cov) %>%
+              mutate(width = end - start) %>%
+              slice_max(width, n = 1, with_ties = TRUE) %>%
+              slice_min(start, n = 1, with_ties = TRUE) %>%
+              transmute(QTL.Start       = start, 
+                        QTL.End         = end, 
+                        QTL.Convergence = as.integer(cov))
+            
+          }
+          
+        }
+        
+      }) %>%
+      ungroup() %>%
+      left_join(count(s_QTL, Chr, name = "QTL_count"), by = "Chr") %>%
+      mutate(QTl.Wide = QTL.End - QTL.Start) %>%
+      select(Chr, QTL.Start, QTL.End, QTL.Convergence, QTL_count, QTl.Wide)
+    
+    # Retrieve data
+    c_QTL
+    
+  }
+  
+  # Helper 4: Unified loader 
+  load_qtl <- function(dir, name, recursive = FALSE) {
+    
+    # 
+    if (isTRUE(recursive)) {
+      
+      # Informative message
+      message("Getting list of CSV files...")
+      
+      # Pattern: files that start with 'name' and end with .csv (adjust if needed)
+      files <- list.files(path = dir,
+                          pattern = paste0("^", name, ".*\\.csv$"),
+                          full.names = TRUE,
+                          recursive = TRUE)
+      
+      # Informative message
+      message(paste("QTL mapping files found:", length(files)))
+      
+      #
+      if (length(files) == 0) stop("No files found. Check 'dir', 'name' and extension.")
+      
+      # Informative message
+      message("Reading QTL mapping files...") 
+      
+    } else {
+      
+      # Informative message
+      message("Loading QTL file...")
+      
+      #
+      files <- name
+      
+      #
+      if (!file.exists(files)) stop("File not found: ", files)
+      
+    }
+    
+    # s_QTL: single long table of all QTLs
+    s_QTL <- purrr::map_dfr(files, parse_qtl) %>%
+      mutate(Chr = as.numeric(Chr),
+             QTL.Start = as.numeric(QTL.Start),
+             QTL.End = as.numeric(QTL.End))
+    
+    # c_QTL: per-chromosome convergence
+    c_QTL <- converge_qtl(s_QTL) %>%
+      mutate(Chr = as.numeric(Chr),
+             QTL.Start = as.numeric(QTL.Start),
+             QTL.End = as.numeric(QTL.End))
+    
+    # Informative message
+    message("QTL file(s) loaded successfully")
+    
+    # Retrieve data
+    list(s_QTL = s_QTL, c_QTL = c_QTL)
+    
+  }
+  
+  # Helper 5: Classify gene–QTL relationship
+  classify_location <- function(df) {
+    df %>% mutate(Location = case_when(
+      Gen.Start >= QTL.Start & Gen.End <= QTL.End ~ "Gene inside QTL",
+      QTL.Start >= Gen.Start & QTL.End <= Gen.End ~ "QTL inside gene",
+      TRUE                                        ~ "Gene overlaps QTL"))
+  }
+  
+  # Helper 6: # Filter gene info and match it with QTL data
+  annotate_genes <- function(s_QTL, c_QTL, gff) {
+    
+    # Informative message
+    message("Matching genes to s_QTL and c_QTL intervals...")
+    
+    # s_QTL x GFF
+    s_gff_m <- gff %>%
+      inner_join(s_QTL %>% transmute(Chr, QTL.Start, QTL.End, Trait = Phenotype),
+                 by = "Chr") %>%
+      filter(Gen.Start <= QTL.End, Gen.End >= QTL.Start) %>%
+      classify_location() %>%
+      select(Trait, Chr, QTL.Start, QTL.End, What, Name, Location, Gen.Start, Gen.End, Strand) %>%
+      arrange(Chr, QTL.Start, Gen.Start)
+    
+    # c_QTL x GFF
+    c_gff_m <- gff %>%
+      inner_join(c_QTL %>% transmute(Chr, QTL.Start, QTL.End),
+                 by = "Chr") %>%
+      filter(Gen.Start <= QTL.End, Gen.End >= QTL.Start) %>%
+      classify_location() %>%
+      select(Chr, QTL.Start, QTL.End, What, Name, Location, Gen.Start, Gen.End, Strand) %>%
+      arrange(Chr, QTL.Start, Gen.Start)
+    
+    # Informative message
+    message(paste("There are", nrow(s_gff_m), "genes to annotate (s_QTL)"))
+    message(paste("There are", nrow(c_gff_m), "genes to annotate (c_QTL)"))
+    
+    # Return both annotated tables
+    list(s_gff = s_gff_m, c_gff = c_gff_m)
+    
+  }
+  
+  # # Helper 7: build a named list of data frames per chromosome
+  sheet_list <- function(df, chr_vec, label = "Chr") {
+    
+    # Empty frame with same columns
+    proto <- df[0, ]
+    
+    # 
+    setNames(lapply(chr_vec, function(ch) {
+      
+      # 
+      tmp <- dplyr::filter(df, Chr == ch)
+      
+      #
+      if (nrow(tmp) == 0) proto else tmp}),
+      
+      sprintf("%s_%02d", label, as.integer(chr_vec)))
+    
+  }
+  
+  
+  
+  
+  # 3: Execute the helpers to find and load the data ---------------------------
+  # Set working directory
+  setwd(dir)
+  
+  # Execute function to load annotations files)
+  annotations <- load_annotation(version, wdyw)
+  
+  # Execute function to load QTL file(s)
+  qtls <- load_qtl(dir, name, recursive)
+  
+  # Extract the dataframes
+  annot <- annotations$annot
+  gff   <- annotations$gff
+  s_QTL <- qtls$s_QTL
+  c_QTL <- qtls$c_QTL
+  
+  # Informative message
+  message(paste0("There are ", dim(s_QTL)[1], " single QTLs and ", 
+                 dim(s_QTL)[1], " convergence QTLs to annotate"))
+  
+  
+  
+  
+  # 4: Filtering the gff3 data -------------------------------------------------
+  gff_clean <- annotate_genes(s_QTL, c_QTL, gff)
+  s_gff <- gff_clean$s_gff
+  c_gff <- gff_clean$c_gff
+    
+    
+  
+    
+  # 5: Match the annotation data -----------------------------------------------
+  # Informative messages
+  message("Joining annotation for single QTLs (s_QTL) and",
+          "convergence QTLs (c_QTL) genes...")
+  
+  # Vectorized join for s_QTl
+  s_QTL_annotation <- s_gff %>%
+    inner_join(annot, by = "Name") %>%
+    mutate(ID = paste0(Chr, Name, Gen.Start, Gen.End, Strand)) %>%
+    filter(!duplicated(ID)) %>%
+    select(-ID, Trait, Chr, QTL.Start, QTL.End, What, Name, Location, 
+           Gen.Start, Gen.End, Strand, GO, Annotation) %>%
+    arrange(Chr, QTL.Start, Gen.Start, Name)
+  
+  # Vectorized join for c_QTL (keeps only genes with annotation)
+  c_QTL_annotation <- c_gff %>%
+    inner_join(annot, by = "Name") %>%
+    mutate(ID = paste0(Chr, Name, Gen.Start, Gen.End, Strand)) %>%
+    filter(!duplicated(ID)) %>%
+    select(-ID, Chr, QTL.Start, QTL.End, What, Name, Location, 
+           Gen.Start, Gen.End, Strand, GO, Annotation) %>%
+    arrange(Chr, QTL.Start, Gen.Start, Name)
+  
+  # Informative messages
+  message(paste0("There are", nrow(s_QTL_annotation), 
+                 " genes annotated for single QTLs (s_QTL) and ",
+                 nrow(c_QTL_annotation), 
+                 " genes annotated for convergence QTLs (c_QTL)"))
+    
+    
+    
+    
+  # 6: Saving outputs -----------------------------------------------------------
+  message("Preparing Excel workbooks...")
+  
+  # Decide sheet order
+  chr_order <- if (exists("s_QTL", inherits = FALSE)) {
+    sort(unique(s_QTL$Chr))
+  } else {
+    sort(unique(c(s_QTL_annotation$Chr, c_QTL_annotation$Chr)))
+  }
+  
+  # Build sheet lists (one per workbook)
+  s_sheets <- sheet_list(s_QTL_annotation, chr_order)
+  c_sheets <- sheet_list(c_QTL_annotation, chr_order)
+  
+  # Informative message
+  message(paste0("\nSaving output files as:\n",
+                 "- ", prefix, "_sQTL.annotation.xlsx\n",
+                 "- ", prefix, "_cQTL.annotation.xlsx"))
+  
+  # Write both Excel files (one sheet per chromosome)
+  openxlsx::write.xlsx(x         = s_sheets,
+                       file      = paste0(prefix, "_sQTL.annotation.xlsx"),
+                       overwrite = TRUE)
+  
+  openxlsx::write.xlsx(x         = c_sheets,
+                       file      = paste0(prefix, "_cQTL.annotation.xlsx"),
+                       overwrite = TRUE)
+  
+  # Informative message
+  message("All is done!")
   
 }
 
 
 
+
 # Example(s) -------------------------------------------------------------------
 # Set arguments
+# dir <- "D:/OneDrive - CGIAR/00_BioInf_Platform/16_Flowering/02_Annotation/"
+# name <- "Regions_QTLs.csv"
+# recursive <- FALSE
 # version <- "6.1"
 # wdyw <- "gene"
-# prefix <- "male_stelirity"
+# prefix <- "Flowering"
 
-# If recursive
-# Wdir <- "D:/OneDrive - CGIAR/00_BioInf_Platform/01_ACWP/02_F1/03_F1_Metabol/01_QTLs_CM8996/01_Everything/"
-# name <- "LodIntervals"
-# recursive <- "T"
-
-# Non-recursive
-# Wdir <- "D:/OneDrive - CGIAR/00_BioInf_Platform/01_ACWP/03_F2/02_F2_Pheno/14_MaleSterility/"
-# name <- "Chr_13.csv"
-# recursive <- "F"
 
 
 
 # Run function -----------------------------------------------------------------
-# QTL_Annotation(version, wdyw, prefix, Wdir, name, recursive)
+# QTL_Annotation(dir, name, recursive, version, wdyw, prefix)

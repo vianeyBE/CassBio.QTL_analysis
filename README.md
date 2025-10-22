@@ -1,4 +1,4 @@
-# Cassava Bioinformatics Platform: QTL analysis pipeline 🧬
+# Cassava Bioinformatics Platform: QTL pipeline 🧬
 
 A modular, end-to-end pipeline to conduct **QTL (Quantitative Trait Loci)** mapping for cassava bi-parental populations. It performs SNP filtering, encoding, QTL single-marker analysis, high-resolution plotting, functional annotation, and validation through SNP-to-trait boxplots.
 
@@ -61,6 +61,7 @@ To clone the repository and ensure reproducibility:
 
 ```bash
 
+# Clone the repository
 git clone https://github.com/vianeyBE/CassBio.QTL_analysis.git
 cd CassBio.QTL_analysis
 
