@@ -1,6 +1,7 @@
 # Short name: Annotation for QTL results
-# Description: Retrieves the annotation of closest genes down and up stream
-# Output: CSV file with the annotation results
+# Description (1): Get the annotation of region using the QTL results
+# Description (2): Retrieves genes that overlap or are inside the region
+# Output: Excel files with the annotation results
 # 
 # Authors (1): Camilo E. Sanchez (c.e.sanchez@cgiar.org)
 # Authors (2): Vianey Barrera-Enriquez (vpbarrera@gmail.com)
@@ -16,14 +17,26 @@
 
 
 
-###### To do ######
+# To do ------------------------------------------------------------------------
 # 1: Add trait name in c_QTL 
 
 
 
 
+# Example ----------------------------------------------------------------------
+# Set arguments
+# dir <- "D:/OneDrive - CGIAR/00_BioInf_Platform/16_Flowering/02_Annotation/"
+# name <- "Regions_QTLs.csv"
+# recursive <- FALSE
+# version <- "6.1"
+# wdyw <- "gene"
+# prefix <- "Flowering"
+
+
+
+
 # 0: Function init -------------------------------------------------------------
-QTL_Annotation <- function(dir, name, recursive, version, wdyw, prefix) {
+QTL_Annotation <- function(dir, name, recursive = F, version, wdyw, prefix) {
   
   
   
@@ -423,18 +436,6 @@ QTL_Annotation <- function(dir, name, recursive, version, wdyw, prefix) {
   message("All is done!")
   
 }
-
-
-
-
-# Example(s) -------------------------------------------------------------------
-# Set arguments
-# dir <- "D:/OneDrive - CGIAR/00_BioInf_Platform/16_Flowering/02_Annotation/"
-# name <- "Regions_QTLs.csv"
-# recursive <- FALSE
-# version <- "6.1"
-# wdyw <- "gene"
-# prefix <- "Flowering"
 
 
 
